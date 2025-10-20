@@ -26,7 +26,7 @@ authors:
   given-names: "Rafał"
   orcid: "https://orcid.org/0000-0002-9767-8883"
 title: "URB"
-version: 1.0.0
+version: 1.1.0
 date-released: 2025-05-15
 url: "https://github.com/COeXISTENCE-PROJECT/URB"
 preferred-citation:
@@ -60,4 +60,3 @@ preferred-citation:
       month     = {December},
       year      = {2025}
     }
-
