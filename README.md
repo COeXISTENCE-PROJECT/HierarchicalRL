@@ -1,5 +1,6 @@
 ![Version](https://img.shields.io/badge/version-1.1.0-blue?logo=git&logoColor=white)
 [![Dataset](https://img.shields.io/badge/Dataset-Available-blue?logo=kaggle&logoColor=white)](https://www.kaggle.com/datasets/ukaszgorczyca/urb-networks)
+[![Citation](https://img.shields.io/badge/Cite-this%20work-blue?logo=citation-needed&logoColor=white)](https://github.com/COeXISTENCE-PROJECT/URB/blob/main/CITATION.CFF)
 [![Test scripts](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml/badge.svg?branch=main)](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml)
 [![Test baselines](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml/badge.svg)](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue?logo=open-source-initiative&logoColor=white)](https://github.com/COeXISTENCE-PROJECT/URB/blob/main/LICENSE)
@@ -260,20 +261,19 @@ Pre-CAV mean travel times ($t_{pre}$) are constant per network: **St. Arnoult: 3
 
 
 > **Task 2 - Full autonomy:**
-> In St. Arnoult, what happens when **all** drivers _mutate_ to CAVs and delegate routing decisions. Then, for a given number of training episodes, the agents develop routing strategies to minimize their delay using MARL.
+> In St. Arnoult, what happens when **all** drivers _mutate_ to CAVs and delegate routing decisions?
 
 <p align="center">
   <img src="docs/scenario2.png" align="center" width="50%"/>
 </p>
 
-<!--
-> [!INFO]
--->
+
+> [!NOTE]
 > The parameterization details for the above results are provided in the experiment data [repository](https://zenodo.org/records/17317056).
 
 ---
 
-## Citation
+## 📖 Citation
 
 If you use this software, please cite it as below.
 
