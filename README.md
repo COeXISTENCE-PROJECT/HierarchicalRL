@@ -1,4 +1,5 @@
-![Version](https://img.shields.io/badge/version-1.1.0-blue?logo=git&logoColor=white)
+![Version](https://img.shields.io/badge/version-1.1.1-blue?logo=git&logoColor=white)
+[![DOI](https://zenodo.org/badge/962568914.svg)](https://doi.org/10.5281/zenodo.17422845)
 [![Dataset](https://img.shields.io/badge/Dataset-Available-blue?logo=kaggle&logoColor=white)](https://www.kaggle.com/datasets/ukaszgorczyca/urb-networks)
 [![Citation](https://img.shields.io/badge/Cite-this%20work-blue?logo=citation-needed&logoColor=white)](https://github.com/COeXISTENCE-PROJECT/URB/blob/main/CITATION.CFF)
 [![Test scripts](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml/badge.svg?branch=main)](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml)
