@@ -1,10 +1,10 @@
-![Version](https://img.shields.io/badge/version-1.1.1-blue?logo=git&logoColor=white)
+![GitHub Release](https://img.shields.io/github/v/release/COeXISTENCE-PROJECT/urb?color=green)
 [![DOI](https://zenodo.org/badge/962568914.svg)](https://doi.org/10.5281/zenodo.17422845)
 [![Dataset](https://img.shields.io/badge/Dataset-Available-blue?logo=kaggle&logoColor=white)](https://www.kaggle.com/datasets/ukaszgorczyca/urb-networks)
 [![Citation](https://img.shields.io/badge/Cite-this%20work-blue?logo=citation-needed&logoColor=white)](https://github.com/COeXISTENCE-PROJECT/URB/blob/main/CITATION.CFF)
 [![Test scripts](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml/badge.svg?branch=main)](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml)
 [![Test baselines](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml/badge.svg)](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue?logo=open-source-initiative&logoColor=white)](https://github.com/COeXISTENCE-PROJECT/URB/blob/main/LICENSE)
+![GitHub License](https://img.shields.io/github/license/COeXISTENCE-PROJECT/urb)
 [![Open in Code Ocean](https://codeocean.com/codeocean-assets/badge/open-in-code-ocean.svg)](https://codeocean.com/capsule/1896262/tree)
 
 
