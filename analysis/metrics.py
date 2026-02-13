@@ -608,8 +608,8 @@ def extract_metrics(path, config, verbose=False):
         cav_duration_cols = [f"agent_{id}_duration" for id in CAV_ids if f"agent_{id}_duration" in training_frames.columns]
         human_duration_cols = [f"agent_{id}_duration" for id in human_ids if f"agent_{id}_duration" in training_frames.columns]
         if cav_duration_cols and human_duration_cols:
-            average_time_CAVs = training_frames[cav_duration_cols].mean()
-            average_time_humans = training_frames[human_duration_cols].mean()
+            average_time_CAVs = training_frames[cav_duration_cols].mean(axis=1) # per-episode average for CAV agents
+            average_time_humans = training_frames[human_duration_cols].mean(axis=1) # per-episode average for unmutated human agents
 
             winrate = np.mean((average_time_humans - average_time_CAVs) > 0)
 
