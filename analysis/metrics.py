@@ -604,14 +604,9 @@ def extract_metrics(path, config, verbose=False):
 
     winrate = np.nan
 
-    if not training_frames.empty and human_ids and CAV_ids:
-        cav_duration_cols = [f"agent_{id}_duration" for id in CAV_ids if f"agent_{id}_duration" in training_frames.columns]
-        human_duration_cols = [f"agent_{id}_duration" for id in human_ids if f"agent_{id}_duration" in training_frames.columns]
-        if cav_duration_cols and human_duration_cols:
-            average_time_CAVs = training_frames[cav_duration_cols].mean(axis=1) # per-episode average for CAV agents
-            average_time_humans = training_frames[human_duration_cols].mean(axis=1) # per-episode average for unmutated human agents
+    if (not np.isnan(t_CAV)) and (not np.isnan(t_pre)):
+        winrate = float(t_CAV < t_pre) # return bool as 1.0 or 0.0 for single experiment
 
-            winrate = np.mean((average_time_humans - average_time_CAVs) > 0)
 
     # ----- Compile metrics into DataFrames -----
     
