@@ -1,5 +1,5 @@
 {
-    "smooth_by" : 3,
+    "smooth_by" : -1,
     "plot_choices" : "basic",
     "save_every" : 1,
     "plot_every" : 2,
