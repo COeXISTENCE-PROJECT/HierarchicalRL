@@ -1,5 +1,7 @@
 ### (MA)RL algorithms and baselines.
 
+#### (MA)RL algorithms
+
 We deliver here scripts for the experiment runs. Each associated algorithm with selected implementations from `TorchRL`:
 * ```ippo_torchrl.py``` uses Independent Proximal Policy Optimization algorithm,
 * ```mappo_torchrl.py``` uses Multi Agent Proximal Policy Optimization algorithm,
@@ -12,6 +14,8 @@ Moreover, we have two independent algorithms with our custom implementations:
 * ```ippo.py``` uses Independent Proximal Policy Optimization.
 
 You can tune, adjust, hyperparameterize and modify all the provided implementations, or create own scripts.
+
+#### Baselines
 
 Apart from RL algorithms, we provide baseline algorithms to compare with, can be used with ```baselines.py``` and model options consist:
 * **Baselines included in URB**
