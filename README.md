@@ -236,7 +236,7 @@ Below are some results from three networks and two scenarios, reported in our pa
 **Table 1:** Scenario 1 results for three cities (mean±std over five seeded runs).  
 Pre-CAV mean travel times ($t_{pre}$) are constant per network: **St. Arnoult: 3.15, Provins: 2.8, Ingolstadt: 4.21**.
 
-| City | Algorithm | $t_{test}$ | $t_{CAV}$ | $t_{HDV}$ | $c_{all}$ | $c_{HDV}$ | $c_{CAV}$ | $\Delta_V$ | $\Delta_V$ | $\mathbf{WR}$ |
+| City | Algorithm | $t_{test}$ | $t_{CAV}$ | $t_{HDV}$ | $c_{all}$ | $c_{HDV}$ | $c_{CAV}$ | $\Delta_V$ | $\Delta_L$ | $\mathbf{WR}$ |
 |------|------------|--------|--------|--------|--------|--------|--------|--------|--------|--------|
 | **St. Arnoult** | IPPO | 3.28 (0.004) | 3.33 (0.013) | 3.25 (0.008) | _0.63_ (0.015) | _0.13_ (0.004) | _1.38_ (0.034) | -0.24 (0.067) | 0.06 (0.004) | 0% |
 |  | IQL | 3.36 (0.040) | 3.53 (0.104) | _3.24_ (0.005) | 0.66 (0.000) | 0.14 (0.000) | 1.44 (0.004) | -0.37 (0.115) | 0.09 (0.021) | 0% |
