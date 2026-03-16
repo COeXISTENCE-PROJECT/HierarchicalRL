@@ -1,5 +1,8 @@
 """
 This script is used to train AV agents with baseline greedy algorithm (version with traffic history lookup).
+
+Developed: Jul–Aug 2025
+Primary Author: M.Sudoł
 """
 
 import os
@@ -22,6 +25,7 @@ from utils import clear_SUMO_files
 from tqdm import tqdm
 
 import greedy_utils
+from greedy_utils import TrafficRecorder
 
 
 
@@ -199,13 +203,13 @@ if __name__ == "__main__":
     """
     ^
     |
-    User defined AV learning pipeline!
+    User defined AV learning pipeline
     """
     
     pbar.set_description("AV learning\n")
 
     # Auxiliary structures
-    experiment_records = greedy_utils.initialize_experiment_records(traffic_environment=env)
+    traffic_recorder = TrafficRecorder(traffic_environment=env)
     agent_mapping = {agent.id : i for i,agent in enumerate(env.all_agents)} # mapping: agent id to agent position in env.all_agents (list[Agent]) 
     
 
@@ -216,7 +220,7 @@ if __name__ == "__main__":
         # Iterate over machine agents (only machine agents ids are added to env.possible_agents during mutation)
         for agentid in env.agent_iter():
 
-            # Pick Agent object corresponding to agentid
+            # Pick Agent object corresponding to agent ID
             agentid_int = int(agentid)
             agent = env.all_agents[agent_mapping[agentid_int]]
             assert agent.id==agentid_int # ensure that agent object id matches agentid
@@ -226,23 +230,22 @@ if __name__ == "__main__":
    
             if termination or truncation:
 
-                # Update experiment records with agent's episode info
+                # Processing agent that finished driving -> update experiment records with agent's episode info
                 travel_time = -reward
-                greedy_utils.update_records(
+                traffic_recorder.update(  #od: Tuple[int], timestamp: int, route:int, episode:int, travel_time: float)
                     od=(agent.origin, agent.destination),
                     timestamp=agent.start_time,
                     route=episode_actions[agentid_int],
-                    duration=travel_time,
                     episode=episode,
-                    records=experiment_records
+                    travel_time=travel_time
                 )
                 action = None
 
             
             else:
 
-                # Select action for the current agent
-                action = greedy_utils.select_agent_action(agent=agent, records=experiment_records)
+                # Processing agent that is departing -> select agent's action
+                action = greedy_utils.select_agent_action(agent=agent, traffic_recorder=traffic_recorder)
                 episode_actions[agentid_int] = action
 
             env.step(action)
