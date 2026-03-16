@@ -48,7 +48,7 @@ The algorithm is kept simple, as this version already performs well in the teste
 #### Note:
 A “first-to-last” greedy approach could be implemented and compared with the current one. This is technically challenging in the current framework (i.e., running only the first $k$ agents in the simulation and incrementing $k$ in subsequent episodes).<br>
 In the “first-to-last” variant, the first agent tests all $n$ possible routes (e.g., $n = 4$), selects the fastest, and commits to it. The second agent then chooses among their four routes with the first agent fixed on their choice, and the process repeats for all agents.
-Total simulation days required: $n_{\text{route\_choices}} \times n_{\text{agents}}$.
+Total simulation days required: $n_{\text{route choices}} \times n_{\text{agents}}$.
 
 
 
