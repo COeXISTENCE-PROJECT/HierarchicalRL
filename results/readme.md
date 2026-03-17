@@ -64,7 +64,7 @@ The structure of this result data is demonstrated with some sample results provi
 Results for the **IPPO**, **IQL**, **MAPPO**, and **QMIX** MARL algorithms, as well as the **AON**, **human**, and **random** baselines, are available in [https://arxiv.org/abs/2505.17734](https://arxiv.org/abs/2505.17734).<br>
 Selected results from later experiments are shown below.
 
-All plots correspond to *Scenario 1* (40% AV) with $environment seed = 42$.<br><br>
+All plots correspond to *Scenario 1* (40% AV) with $environment$ $seed = 42$.<br><br>
 
 <table>
   <tr>
