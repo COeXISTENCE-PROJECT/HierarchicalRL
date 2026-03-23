@@ -1,5 +1,8 @@
 """
-This script is used to train AV agents with baseline greedy algorithm (version with traffic history lookup).
+This script implements a greedy route selection policy for AV agents, based on travel time data from past episodes.
+
+For each agent (origin, destination, departure time), selects the route with
+the minimum recorded travel time. If multiple routes share the minimum, one is sampled.
 
 Developed: Jul–Aug 2025
 Primary Author: M.Sudoł
@@ -37,7 +40,6 @@ if __name__ == "__main__":
     parser.add_argument('--task-conf', type=str, required=True)
     parser.add_argument('--net', type=str, required=True)
     parser.add_argument('--env-seed', type=int, default=42)
-    # Any additional arguments can be added here
     
     
     args = parser.parse_args()
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     task_config = args.task_conf
     network = args.net
     env_seed = args.env_seed
-    # ... and should be passed to the script
+
     
     # Initial print
     print("### STARTING EXPERIMENT ###")
@@ -84,7 +86,7 @@ if __name__ == "__main__":
 
     # Define input / output paths and plotting options 
     custom_network_folder = f"../networks/{network}"
-    phases = [1, human_learning_episodes, int(training_eps) + human_learning_episodes] ## Define the phases as per your requirement
+    phases = [1, human_learning_episodes, int(training_eps) + human_learning_episodes] # Define experiment phases in terms of num episodes
     phase_names = ["Human stabilization", "Mutation and AV learning", "Testing phase"]
     records_folder = f"../results/{exp_id}"
     plots_folder = f"../results/{exp_id}/plots"
@@ -112,7 +114,7 @@ if __name__ == "__main__":
 
     
     num_machines = int(num_agents * ratio_machines) # Define the number of machines as per your requirement
-    total_episodes =  human_learning_episodes + training_eps + test_eps ## Define the total number of episodes as per your requirement
+    total_episodes =  human_learning_episodes + training_eps + test_eps # Define the total number of episodes as per your requirement
             
     # Dump exp config to records
     exp_config_path = os.path.join(records_folder, "exp_config.json")
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     dump_config["num_agents"] = num_agents
     dump_config["num_machines"] = num_machines
     dump_config["algorithm"] = ALGORITHM
-    # ...any other parameters you want to save in `exp_config.json` can be added here
+
     with open(exp_config_path, 'w', encoding='utf-8') as f:
         json.dump(dump_config, f, indent=4)
 
@@ -182,14 +184,13 @@ if __name__ == "__main__":
     res = env.reset()
 
     
-    # #### Human learning
-    print(f"env.agents={env.agents}")
+    # Human learning
     pbar = tqdm(total=total_episodes, desc="Human learning")
     for episode in range(human_learning_episodes):
         env.step()
         pbar.update()
 
-    # #### Mutation
+    # Mutation
     env.mutation(disable_human_learning = not should_humans_adapt, mutation_start_percentile = -1)
 
     print(f"""
@@ -203,17 +204,18 @@ if __name__ == "__main__":
     """
     ^
     |
-    User defined AV learning pipeline
+    AV learning pipeline
     """
     
     pbar.set_description("AV learning\n")
 
-    # Auxiliary structures
+    # Auxiliary structures:
     traffic_recorder = TrafficRecorder(traffic_environment=env)
     agent_mapping = {agent.id : i for i,agent in enumerate(env.all_agents)} # mapping: agent id to agent position in env.all_agents (list[Agent]) 
     
 
-    for episode in range(training_eps + test_eps):
+    
+    for episode in range(training_eps + test_eps): # The same policy for training and testing phase
         env.reset()
         episode_actions = dict()
 
@@ -232,7 +234,7 @@ if __name__ == "__main__":
 
                 # Processing agent that finished driving -> update experiment records with agent's episode info
                 travel_time = -reward
-                traffic_recorder.update(  #od: Tuple[int], timestamp: int, route:int, episode:int, travel_time: float)
+                traffic_recorder.update(  #od: Tuple[int], timestamp: int, route:int, episode:int, travel_time: float
                     od=(agent.origin, agent.destination),
                     timestamp=agent.start_time,
                     route=episode_actions[agentid_int],

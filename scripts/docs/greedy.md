@@ -22,7 +22,6 @@ At the start of each day, each agent selects a route according to the following 
 - Select the route with the lowest recorded travel time so far.
 
 If no historical record exists for a route, its free-flow travel time is used as an initial estimate.
-
 <br>
 
 
@@ -40,9 +39,12 @@ The algorithm is kept simple, as this version already performs well in the teste
 
 
 #### Possible extensions:
-- The algorithm currently considers only exact departure timepoint histories. It may be extended by also considering nearby timepoints for the same OD pair for a given driver.
-- The AV simulation starts with an empty history. Instead, learned human actions after mutation could be used as AV choices on the first day after mutation.
-- Instead of selecting the route with the minimal travel time ever recorded (after mutation), the driver could select the route based on the weighted average of travel times, with higher weights assigned to more recent observations.
+- Monitoring route performance over time: currently, the minimum travel time *ever* recorded for each route is used. This works well for tested scenarios. For more complex ones, the policy can be extended to incorporate information from recent episodes, allowing it to adapt when the best route becomes worse over time.
+- In particular: routes could be selected based on a weighted average of past travel times, with higher weights assigned to more recent observations.
+- Additional randomness can be introduced to allow more exploration of suboptimal routes.
+- The algorithm currently considers only exact departure timepoint histories. It may be extended to also consider nearby timepoints for the same OD pair for a given agent.
+- The AV simulation starts with an empty history. Instead, learned human actions after mutation could be used as initial AV choices on the first day after mutation.
+
 
 
 #### Note:

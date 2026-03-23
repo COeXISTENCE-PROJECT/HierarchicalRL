@@ -124,8 +124,8 @@ class TrafficRecorder:
 
     def _get_route_min_travel_time(self, od: Tuple[int], timestamp: int, route: int)->float:
         """
-        Return the shortest reported time for a route. 
-        If no time is reported, return the route free flow time.
+        Return the shortest time reported for a route. 
+        If no time was recorded, return the route free flow time.
         """
         min_travel_time = self.records[od][timestamp][route]['min_time']
         if min_travel_time is None:
