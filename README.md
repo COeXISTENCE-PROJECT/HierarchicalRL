@@ -236,15 +236,9 @@ We provide templates for extending the possible experiments that can be conducte
 ### Adding new scripts
 Users can add new experiment scripts for testing different algorithms, different implementations and different training pipelines. The recommended script structure is provided in [`scripts/base_script.py`](scripts/base_script.py).
 
-
 ### Adding new baselines
 - **Decentralized (per-agent) baseline models**: users can define and use their own methods by creating a new model that extends [`baseline_models/BaseLearningModel`](baseline_models/base.py).
-
 - **Centralized baseline models** (or methods that cannot be reasonably implemented in a per-agent manner): the recommended approach is to implement them using the universal [`scripts/base_script.py`](scripts/base_script.py) template, in the same way as RL methods.
-
-
-
-
 
 ### New scenarios and hyperparameterizations
 Users can extend possible experiment configurations by adding:
