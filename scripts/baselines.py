@@ -26,6 +26,7 @@ from routerl import TrafficEnvironment
 from tqdm import tqdm
 
 from utils import clear_SUMO_files
+from utils import run_metrics_analysis
 from baseline_models import get_baseline
 
 if __name__ == "__main__":
@@ -251,3 +252,4 @@ if __name__ == "__main__":
     env.stop_simulation()
 
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
+    run_metrics_analysis(exp_id, results_folder="../results")
