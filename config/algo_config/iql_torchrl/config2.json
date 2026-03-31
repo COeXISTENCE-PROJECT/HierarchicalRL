@@ -1,0 +1,18 @@
+{
+    "agent_frames_per_batch" : 10,
+    "n_iters" : 400,
+
+    "num_epochs" : 3,
+    "minibatch_size" : 128,
+    "lr" : 0.0007,
+    "max_grad_norm" : 1.0,
+    "gamma" : 0.95,
+    "memory_size" : 15000,
+    "mlp_depth" : 3,
+    "mlp_cells" : 96,
+    "tau" : 0.005,
+    "eps" : 0.995,
+    "eps_init" : 1.0,
+    "eps_end" : 0.05,
+    "exploration_fraction" : 0.6
+}

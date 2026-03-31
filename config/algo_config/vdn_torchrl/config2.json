@@ -4,7 +4,7 @@
 
     "num_epochs" : 3,
     "minibatch_size" : 128,
-    "lr" : 7e-4,
+    "lr" : 0.001,
     "max_grad_norm" : 1.0,
     "memory_size" : 20000,
     "tau" : 0.005,
@@ -13,7 +13,7 @@
     "mlp_cells" : 96,
     "eps_greedy_init" : 1.0,
     "eps_greedy_end" : 0.05,
-    "mixing_embed_dim" : 128,
+    "mixing_embed_dim" : 64,
     "exploration_fraction" : 0.6,
     "share_params" : true
 }

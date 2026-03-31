@@ -14,5 +14,5 @@
     "policy_network_depth": 3,
     "policy_network_num_cells" : 96,
     "critic_network_depth": 3,
-    "critic_network_num_cells" : 128
+    "critic_network_num_cells" : 192
 }
