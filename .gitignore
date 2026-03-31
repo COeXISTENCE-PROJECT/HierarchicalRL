@@ -167,6 +167,7 @@ cython_debug/
 .pypirc
 
 .DS_Store
+.local/
 
 # Keep only the parts of results relevant to the leaderboard
 episodes/
