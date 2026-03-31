@@ -25,6 +25,8 @@ from baseline_models import BaseLearningModel
 from iql             import Network
 from utils           import clear_SUMO_files
 from utils           import print_agent_counts
+from utils           import run_metrics_analysis
+from utils           import save_loss_records
 
 ### A simplified single-step actor-only PPO implementation for single-step decisions.
 class PPO(BaseLearningModel):
@@ -332,7 +334,22 @@ if __name__ == "__main__":
     # Finalize the experiment
     pbar.close()
     env.plot_results()
-    losses_pd = pd.DataFrame([{"id": agent.id, "losses": agent.model.loss} for agent in env.machine_agents])
-    losses_pd.to_csv(os.path.join(records_folder, "losses.csv"), index=False)
+    loss_records = []
+    for agent in env.machine_agents:
+        for iteration, loss_value in enumerate(agent.model.loss, start=1):
+            loss_records.append(
+                {
+                    "iteration": iteration,
+                    "agent_id": agent.id,
+                    "loss": loss_value,
+                }
+            )
+    save_loss_records(
+        records_folder,
+        loss_records,
+        columns=["iteration", "agent_id", "loss"],
+    )
+
     env.stop_simulation()
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
+    run_metrics_analysis(exp_id, results_folder="../results")

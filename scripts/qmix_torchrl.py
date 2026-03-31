@@ -11,7 +11,6 @@ import ast
 import json
 import logging
 
-import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 
@@ -33,6 +32,8 @@ from torchrl.objectives.multiagent.qmixer import QMixerLoss
 from tqdm import tqdm
 
 from utils import clear_SUMO_files
+from utils import run_metrics_analysis
+from utils import save_loss_records
 
 
 if __name__ == "__main__":
@@ -327,9 +328,7 @@ if __name__ == "__main__":
 
      
     #  Training loop
-    loss_values_path = os.path.join(records_folder, "losses/loss_values.txt")
-    os.makedirs(os.path.dirname(loss_values_path), exist_ok=True)
-    open(loss_values_path, 'w').close()
+    loss_records = []
     
     pbar = tqdm(total=n_iters, desc="Training")
     for tensordict_data in collector:
@@ -370,8 +369,12 @@ if __name__ == "__main__":
 
         if step_loss_values:
             loss = sum(step_loss_values) / len(step_loss_values)
-            with open(loss_values_path, 'a') as f:
-                f.write("%s\n" % loss)
+            loss_records.append(
+                {
+                    "iteration": len(loss_records) + 1,
+                    "loss": loss,
+                }
+            )
         qnet_explore[1].step(frames=current_frames)  # Update exploration annealing
         collector.update_policy_weights_()
         pbar.update()
@@ -390,28 +393,13 @@ if __name__ == "__main__":
     # Visualize results
     os.makedirs(plots_folder, exist_ok=True)
     env.plot_results()
-    
-    # Visualize losses
-    loss_values = list()
-    with open(loss_values_path, 'r') as f:
-        for line in f:
-            loss_values.append(float(line.strip()))
-    colors = [
-        "firebrick", "teal", "peru", "navy", 
-        "salmon", "slategray", "darkviolet", 
-        "lightskyblue", "darkolivegreen", "black"]
-    plt.figure(figsize=(12, 6))
-    plt.plot(loss_values, label='loss_values', color=colors[0], linewidth=3)
-    plt.xlabel('Iteration', fontsize=14)
-    plt.ylabel('Loss', fontsize=14)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.title('Loss', fontsize=18, fontweight='bold')
-    plt.grid(True, axis='y')
-    plt.tight_layout()
-    plt.savefig(os.path.join(plots_folder, 'losses.png'), dpi=300)
-    plt.close()
+    save_loss_records(
+        records_folder,
+        loss_records,
+        columns=["iteration", "loss"],
+    )
 
     env.stop_simulation()
 
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
+    run_metrics_analysis(exp_id, results_folder="../results")

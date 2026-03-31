@@ -13,6 +13,6 @@
     "normalize_advantage" : true,
     "policy_network_depth": 3,
     "policy_network_num_cells" : 64,
-    "critic_network_depth": 3,
-    "critic_network_num_cells" : 64
+    "critic_network_depth": 2,
+    "critic_network_num_cells" : 128
 }

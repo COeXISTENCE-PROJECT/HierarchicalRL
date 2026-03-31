@@ -202,6 +202,9 @@ python scripts/greedy.py --id ing_greedy --alg-conf config1 --task-conf config2 
 
 Each experiment outputs set of raw records, which are then processed with the script in this folder for a set of performance indicators which we report and several additional metrics that track the quality of the solution and its impact to the system.
 
+All experiment scripts in `scripts/` now automatically run `analysis/metrics.py` at the end of execution.
+Manual execution is still supported as described below.
+
 #### Usage
 
 To use the analysis script, you have to provide in the command line the following command:
@@ -211,6 +214,9 @@ python analysis/metrics.py --id <exp_id> --verbose <verbose> --results-folder <r
 ```
 
 that will collect the results from the experiment with identifier ```<exp_id>``` and save them in the folder ```<exp_id>/metrics/```. The ```--verbose``` flag is optional and if set to ```True``` will print additional information about the analysis process. Flag ```--results-folder``` is optional and if set to ```True``` will use the folder ```<results-folder>``` instead of the default one ```results/```. The flags ```--skip-clearing``` and ```--skip-collecting``` are optional and if set to ```True``` will skip clearing and collecting the results from the experiment, respectively. Those operations have to be done only once, so if you are running the analysis script multiple times, you can skip them.
+
+Loss values from learning scripts are saved in a unified CSV format at:
+`results/<exp_id>/losses/losses.csv`
 
 #### Reported indicators
 

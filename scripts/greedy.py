@@ -25,6 +25,7 @@ import pandas as pd
 from routerl import Keychain as kc
 from routerl import TrafficEnvironment
 from utils import clear_SUMO_files
+from utils import run_metrics_analysis
 from tqdm import tqdm
 
 import greedy_utils
@@ -266,3 +267,4 @@ if __name__ == "__main__":
 
     # Clean SUMO-generated redundant files
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
+    run_metrics_analysis(exp_id, results_folder="../results")

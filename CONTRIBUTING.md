@@ -2,8 +2,9 @@
 
 Thank you for your interest in contributing to URB.
 
-This repository accepts both:
-- **Benchmark extensions**, which add new experimental components, and
+This repository accepts:
+- **Benchmark coverage extensions**, which add new experimental components,
+- **Leaderboard contributions**, new results to be ranked in our leaderboard, and
 - **Software changes**, which improve the framework itself.
 
 Please read the guidelines below before opening a pull request.
@@ -25,7 +26,12 @@ Examples include:
 
 If your contribution falls into this category, please follow the repository structure described below.
 
-### 2. Software changes
+### 2. Leaderboard contributions
+These contributions include new results (palced under `results/` with a unique experiment identifier) to be ranked in our leaderboard.
+
+These can be obtained from existing methods and parameterizations, or with a new addition of a method or a parameterization. The addition of new tasks may be subject to further considerations to keep the contributor efforts more focused.
+
+### 3. Software changes
 These contributions modify or improve the software itself rather than adding benchmark components.
 
 Examples include:
@@ -89,7 +95,7 @@ If your contribution is linked to an issue, include the issue number in the bran
 When opening a pull request, please:
 
 - clearly describe what the PR changes,
-- indicate whether it is a **benchmark extension**, a **software change**, or both,
+- indicate whether it is a **benchmark extension**, **leaderboard contribution**, **software change**, or any combination that applies,
 - explain why the change is needed,
 - keep the scope focused, and
 - update documentation if the change affects how the repository is used.

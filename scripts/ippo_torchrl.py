@@ -11,7 +11,6 @@ import ast
 import json
 import logging
 
-import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 
@@ -31,6 +30,8 @@ from torchrl.objectives import ClipPPOLoss, ValueEstimators
 from tqdm import tqdm
 
 from utils import clear_SUMO_files
+from utils import run_metrics_analysis
+from utils import save_loss_records
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -347,15 +348,7 @@ if __name__ == "__main__":
 
      
     #  Training loop
-    loss_values_path = os.path.join(records_folder, "losses/loss_values.txt")
-    loss_entropy_path = os.path.join(records_folder, "losses/loss_entropy.txt")
-    loss_objective_path = os.path.join(records_folder, "losses/loss_objective.txt")
-    loss_critic_path = os.path.join(records_folder, "losses/loss_critic.txt")
-    os.makedirs(os.path.dirname(loss_values_path), exist_ok=True)
-    open(loss_values_path, 'w').close()
-    open(loss_entropy_path, 'w').close()
-    open(loss_objective_path, 'w').close()
-    open(loss_critic_path, 'w').close()
+    loss_records = []
     
     pbar = tqdm(total=n_iters, desc="Training")
     for tensordict_data in collector:
@@ -411,14 +404,16 @@ if __name__ == "__main__":
                 step_loss_critic.append(loss_vals["loss_critic"].item())
 
         if step_loss_values:
-            with open(loss_values_path, 'a') as f:
-                f.write(f"{sum(step_loss_values) / len(step_loss_values)}\n")
-            with open(loss_entropy_path, 'a') as f:
-                f.write(f"{sum(step_loss_entropy) / len(step_loss_entropy)}\n")
-            with open(loss_objective_path, 'a') as f:
-                f.write(f"{sum(step_loss_objective) / len(step_loss_objective)}\n")
-            with open(loss_critic_path, 'a') as f:
-                f.write(f"{sum(step_loss_critic) / len(step_loss_critic)}\n")
+            avg_loss_value = sum(step_loss_values) / len(step_loss_values)
+            loss_records.append(
+                {
+                    "iteration": len(loss_records) + 1,
+                    "loss": avg_loss_value,
+                    "loss_entropy": sum(step_loss_entropy) / len(step_loss_entropy),
+                    "loss_objective": sum(step_loss_objective) / len(step_loss_objective),
+                    "loss_critic": sum(step_loss_critic) / len(step_loss_critic),
+                }
+            )
         collector.update_policy_weights_()
         pbar.update()
     
@@ -435,46 +430,14 @@ if __name__ == "__main__":
 
     os.makedirs(plots_folder, exist_ok=True)
     env.plot_results()
-        
-    # Visualize losses
-    loss_values = list()
-    with open(loss_values_path, 'r') as f:
-        for line in f:
-            loss_values.append(float(line.strip()))  
-    loss_entropy = list()
-    with open(loss_entropy_path, 'r') as f:
-        for line in f:
-            loss_entropy.append(float(line.strip()))
-    loss_objective = list()
-    with open(loss_objective_path, 'r') as f:
-        for line in f:
-            loss_objective.append(float(line.strip()))
-    loss_critic = list()
-    with open(loss_critic_path, 'r') as f:
-        for line in f:
-            loss_critic.append(float(line.strip()))
-    colors = [
-        "firebrick", "teal", "peru", "navy", 
-        "salmon", "slategray", "darkviolet", 
-        "lightskyblue", "darkolivegreen", "black"]
-    plt.figure(figsize=(12, 6))
-    plt.plot(loss_values, label='loss_values', color=colors[0], linewidth=3)
-    plt.plot(loss_entropy, label='loss_entropy', color=colors[1], linewidth=3)
-    plt.plot(loss_objective, label='loss_objective', color=colors[2], linewidth=3)
-    plt.plot(loss_critic, label='loss_critic', color=colors[3], linewidth=3)
-    plt.legend(fontsize=12)
-    plt.xlabel('Iteration', fontsize=14)
-    plt.ylabel('Loss', fontsize=14)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.title('Losses', fontsize=18, fontweight='bold')
-    plt.grid(True, axis='y')
-    plt.tight_layout()
-    plt.savefig(os.path.join(plots_folder, 'losses.png'), dpi=300)
-    plt.close()
+    save_loss_records(
+        records_folder,
+        loss_records,
+        columns=["iteration", "loss", "loss_entropy", "loss_objective", "loss_critic"],
+    )
     
     env.stop_simulation()
 
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
-
+    run_metrics_analysis(exp_id, results_folder="../results")
 
