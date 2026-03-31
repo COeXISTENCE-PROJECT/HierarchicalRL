@@ -1,12 +1,13 @@
 ## Contribution type
-- [ ] Benchmark extension
+- [ ] Benchmark coverage extension
+- [ ] Leaderboard contribution
 - [ ] Software change
 - [ ] Mixed
 
 ## Summary
 Briefly describe here what this PR changes and why.
 
-## If this is a benchmark extension, what does it add?
+## If this is a benchmark coverage extension, what does it add?
 - [ ] Not applicable
 - [ ] New experiment script
 - [ ] New method
@@ -17,11 +18,17 @@ Briefly describe here what this PR changes and why.
 - [ ] New task configuration
 - [ ] New network
 
-## Benchmark extension details
+## Benchmark coverage extension details
 If applicable, briefly state:
 - what was added,
 - where it was added, and
 - how it is intended to be used.
+
+## If this PR includes new results for our leaderboard, summarize the content and findings.
+Briefly state:
+- what kind of algorithms are tested,
+- in which tasks, and
+- a quick summary on the success rate.
 
 ## Software change details
 If applicable, briefly state:
@@ -31,6 +38,7 @@ If applicable, briefly state:
 
 ## Checklist
 - [ ] I placed new files in the appropriate directory
+- [ ] I ensured that changes are made consistent with the existing benchmark structure
 - [ ] I updated relevant documentation if needed
 - [ ] I kept the PR scope focused
 - [ ] I described the purpose of this PR clearly
