@@ -14,6 +14,7 @@ import json
 import math
 import re
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -25,12 +26,15 @@ METRIC_FILENAMES = [
 ]
 
 VERSIONED_ID_RE = re.compile(r"^(?P<base>.+)_v(?P<version>\d+)$")
+GITHUB_USERNAME_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$")
 
 REQUIRED_STRING_KEYS = [
     "page_title",
     "title_link_text",
     "title_link_url",
     "title_suffix",
+    "join_leaderboard_label",
+    "join_leaderboard_url",
     "meta_text",
     "stats_loading",
     "hero_text",
@@ -38,8 +42,8 @@ REQUIRED_STRING_KEYS = [
     "download_csv_label",
     "filters_title",
     "filters_hint",
-    "filter_exp_type_label",
     "filter_env_label",
+    "filter_env_seed_label",
     "filter_task_label",
     "filter_network_label",
     "filter_action_all",
@@ -76,8 +80,8 @@ REQUIRED_TABLE_HEADERS = [
     "exp_id",
     "algorithm",
     "script",
+    "script_contributor",
     "alg_config",
-    "env_seed",
     "torch_seed",
 ]
 
@@ -240,6 +244,115 @@ def collapse_repeated_experiments(experiments: List[Dict]) -> List[Dict]:
     return collapsed
 
 
+def normalized_path_parts(raw_path: str) -> List[str]:
+    normalized = (raw_path or "").strip().replace("\\", "/")
+    if normalized.startswith("file://"):
+        normalized = normalized[7:]
+    normalized = re.sub(r"^[A-Za-z]:/", "/", normalized)
+    return [part for part in normalized.split("/") if part and part != "."]
+
+
+def script_name_from_path(script_path: str) -> str:
+    parts = normalized_path_parts(script_path)
+    return parts[-1] if parts else ""
+
+
+def resolve_repo_script_file(script_path: str, repo_root: Path) -> Optional[Path]:
+    if not script_path:
+        return None
+
+    script = Path(script_path.replace("\\", "/"))
+    candidates: List[Path] = []
+
+    if script.is_absolute():
+        candidates.append(script)
+    else:
+        candidates.append(repo_root / script)
+        candidates.append(repo_root / "scripts" / script)
+
+    parts = normalized_path_parts(script_path)
+    for index, part in enumerate(parts):
+        if part == "scripts":
+            suffix = Path(*parts[index:])
+            candidates.append(repo_root / suffix)
+
+    script_name = script_name_from_path(script_path)
+    if script_name:
+        candidates.append(repo_root / "scripts" / script_name)
+        candidates.append(repo_root / script_name)
+
+    seen = set()
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        if resolved.exists() and resolved.is_file():
+            return resolved
+    return None
+
+
+def infer_github_username(contributor_name: str, contributor_email: str) -> str:
+    email = (contributor_email or "").strip().lower()
+    name = (contributor_name or "").strip()
+
+    noreply = re.match(
+        r"^(?:\d+\+)?([a-z0-9-]+)@users\.noreply\.github\.com$",
+        email,
+    )
+    if noreply:
+        return noreply.group(1)
+
+    if " " not in name and GITHUB_USERNAME_RE.fullmatch(name):
+        return name
+
+    return ""
+
+
+def script_contributor_info_from_git(
+    script_file: Path,
+    repo_root: Path,
+    cache: Dict[str, Tuple[str, str]],
+) -> Tuple[str, str]:
+    try:
+        rel_script = script_file.relative_to(repo_root).as_posix()
+    except ValueError:
+        return "", ""
+
+    if rel_script in cache:
+        return cache[rel_script]
+
+    try:
+        result = subprocess.run(
+            ["git", "log", "--follow", "--reverse", "--format=%aN%x1f%aE", "--", rel_script],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        cache[rel_script] = ("", "")
+        return "", ""
+
+    if result.returncode != 0:
+        cache[rel_script] = ("", "")
+        return "", ""
+
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    if not lines:
+        cache[rel_script] = ("", "")
+        return "", ""
+
+    payload = lines[0].split("\x1f", 1)
+    contributor_name = payload[0].strip()
+    contributor_email = payload[1].strip() if len(payload) > 1 else ""
+    contributor_username = infer_github_username(contributor_name, contributor_email)
+
+    info = (contributor_name, contributor_username)
+    cache[rel_script] = info
+    return info
+
+
 def validate_strings(strings: Dict, strings_path: Path) -> None:
     missing = [key for key in REQUIRED_STRING_KEYS if key not in strings]
     errors = []
@@ -295,6 +408,8 @@ def collect_experiments(results_dir: Path) -> List[Dict]:
     if not results_dir.exists():
         raise SystemExit(f"Results directory not found: {results_dir}")
 
+    repo_root = Path(__file__).resolve().parent.parent
+    contributor_cache: Dict[str, Tuple[str, str]] = {}
     experiments: List[Dict] = []
     for exp_dir in sorted(results_dir.iterdir()):
         if not exp_dir.is_dir():
@@ -308,6 +423,23 @@ def collect_experiments(results_dir: Path) -> List[Dict]:
             continue
 
         script_path = config.get("script") or ""
+        script_file = resolve_repo_script_file(script_path, repo_root)
+        script_name = script_file.name if script_file else script_name_from_path(script_path)
+        script_contributor, script_contributor_username = (
+            script_contributor_info_from_git(script_file, repo_root, contributor_cache)
+            if script_file
+            else ("", "")
+        )
+        script_contributor_avatar = (
+            f"https://github.com/{script_contributor_username}.png?size=32"
+            if script_contributor_username
+            else ""
+        )
+        script_contributor_url = (
+            f"https://github.com/{script_contributor_username}"
+            if script_contributor_username
+            else ""
+        )
         algorithm = (
             config.get("algorithm")
             or config.get("baseline_model")
@@ -324,7 +456,11 @@ def collect_experiments(results_dir: Path) -> List[Dict]:
                 "task_config": config.get("task_config"),
                 "network": config.get("network"),
                 "algorithm": algorithm,
-                "script": Path(script_path).name if script_path else "",
+                "script": script_name,
+                "script_contributor": script_contributor,
+                "script_contributor_username": script_contributor_username,
+                "script_contributor_avatar": script_contributor_avatar,
+                "script_contributor_url": script_contributor_url,
                 "alg_config": config.get("alg_config")
                 or config.get("algorithm_config")
                 or config.get("algorithm_configuration")
@@ -350,6 +486,8 @@ def build_html(payload: Dict, output_path: Path, template: str) -> None:
         "__TITLE_LINK_URL__": strings["title_link_url"],
         "__TITLE_LINK_TEXT__": strings["title_link_text"],
         "__TITLE_SUFFIX__": strings["title_suffix"],
+        "__JOIN_LEADERBOARD_LABEL__": strings["join_leaderboard_label"],
+        "__JOIN_LEADERBOARD_URL__": strings["join_leaderboard_url"],
         "__META_TEXT__": strings["meta_text"],
         "__STATS_LOADING__": strings["stats_loading"],
         "__HERO_TEXT__": strings["hero_text"],
