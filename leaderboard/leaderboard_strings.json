@@ -5,6 +5,8 @@
   "title_suffix": "Leaderboard",
   "join_leaderboard_label": "Join the\nleaderboard",
   "join_leaderboard_url": "https://github.com/COeXISTENCE-PROJECT/URB/blob/main/CONTRIBUTING.md",
+  "report_problem_label": "Report a problem",
+  "report_problem_url": "https://github.com/COeXISTENCE-PROJECT/URB/issues/new",
   "meta_text": "Ranked benchmark results grouped by environment configuration, task configuration, and traffic network",
   "stats_loading": "loading...",
   "hero_text": "URB benchmarks routing policies for mixed traffic with human drivers and connected autonomous vehicles (CAVs). The table below indexes experiment folders under results/ and ranks runs by benchmark metrics.",

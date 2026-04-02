@@ -122,12 +122,12 @@
     }
 
     .hero img {
-      width: 58px;
-      height: 58px;
+      width: 92px;
+      height: 52px;
       object-fit: contain;
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 6px;
+      border-radius: 10px;
+      padding: 5px;
       background: #fff;
     }
 
@@ -494,6 +494,33 @@
       font-size: 12px;
     }
 
+    .report-link {
+      position: fixed;
+      right: 24px;
+      bottom: 18px;
+      z-index: 80;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid #b8cbee;
+      background: #edf4ff;
+      color: #1a4f8f;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(24, 49, 84, 0.14);
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+    }
+
+    .report-link:hover {
+      background: #dce9ff;
+      border-color: #9fbee8;
+      transform: translateY(-1px);
+    }
+
     @media (max-width: 860px) {
       body {
         padding: 20px 14px 44px;
@@ -508,8 +535,8 @@
       }
 
       .hero img {
-        width: 50px;
-        height: 50px;
+        width: 82px;
+        height: 46px;
       }
 
       .join-link {
@@ -527,6 +554,11 @@
 
       .action-btn {
         flex: 1 1 auto;
+      }
+
+      .report-link {
+        right: 14px;
+        bottom: 12px;
       }
     }
   </style>
@@ -573,6 +605,7 @@
   </div>
 
   <div class="hint-footer">__FOOTER_HINT____FOOTER_SEPARATOR____GENERATED_LABEL__ __GENERATED_AT__</div>
+  <a class="report-link" href="__REPORT_PROBLEM_URL__" target="_blank" rel="noopener">__REPORT_PROBLEM_LABEL__</a>
 
   <div class="metric-tooltip" id="metric-tooltip"></div>
 
