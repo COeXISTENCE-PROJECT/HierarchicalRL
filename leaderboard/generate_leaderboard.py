@@ -612,9 +612,13 @@ def main(args: Optional[Sequence[str]] = None) -> None:
     output_path = parsed.output_dir / "index.html"
     build_html(payload, output_path, template)
 
-    icon_src = Path("docs/urb.png")
-    if icon_src.exists():
-        shutil.copy(icon_src, parsed.output_dir / "urb.png")
+    logo_src = Path("docs/urb.png")
+    if logo_src.exists():
+        shutil.copy(logo_src, parsed.output_dir / "urb.png")
+
+    favicon_src = Path("docs/urb_car.png")
+    if favicon_src.exists():
+        shutil.copy(favicon_src, parsed.output_dir / "urb_car.png")
 
     print(f"Wrote leaderboard to {output_path}")
 
