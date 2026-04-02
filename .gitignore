@@ -182,3 +182,7 @@ combined_data.csv
 
 # Ignore nothing in the networks directory, since it contains the agents.csv
 !networks/*
+networks/.DS_Store
+networks/*/.DS_Store
+
+docs/leaderboard/

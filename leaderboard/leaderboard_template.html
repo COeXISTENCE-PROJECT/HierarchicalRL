@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>__PAGE_TITLE__</title>
-  <link rel="icon" type="image/png" href="urb.png">
+  <link rel="icon" type="image/png" href="urb_car.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -115,20 +115,24 @@
 
     .hero {
       display: grid;
-      grid-template-columns: auto 1fr;
+      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 14px;
       align-items: center;
       margin-bottom: 14px;
     }
 
     .hero img {
-      width: 58px;
-      height: 58px;
+      width: 92px;
+      height: 52px;
       object-fit: contain;
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 6px;
+      border-radius: 10px;
+      padding: 5px;
       background: #fff;
+    }
+
+    .hero-content {
+      min-width: 0;
     }
 
     .hero p {
@@ -136,6 +140,32 @@
       color: #2a3138;
       line-height: 1.48;
       font-size: 14px;
+    }
+
+    .join-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0;
+      min-width: 160px;
+      min-height: 42px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid #b6cdee;
+      background: #edf4ff;
+      color: #1a4f8f;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.15;
+      text-decoration: none;
+      text-align: center;
+      white-space: pre-line;
+      transition: background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .join-link:hover {
+      background: #dce9ff;
+      border-color: #9fbee8;
     }
 
     .controls {
@@ -381,6 +411,41 @@
       cursor: help;
     }
 
+    .contributor-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      max-width: 240px;
+    }
+
+    .contributor-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid #c7d4e2;
+      background: #f3f6fa;
+      object-fit: cover;
+      flex: 0 0 auto;
+    }
+
+    .contributor-name {
+      display: inline-block;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    a.contributor-name {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    a.contributor-name:hover {
+      border-color: var(--accent);
+    }
+
     .metric-header {
       text-decoration: underline dotted #c1ccd7;
       text-underline-offset: 3px;
@@ -429,6 +494,33 @@
       font-size: 12px;
     }
 
+    .report-link {
+      position: fixed;
+      right: 24px;
+      bottom: 18px;
+      z-index: 80;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid #b8cbee;
+      background: #edf4ff;
+      color: #1a4f8f;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(24, 49, 84, 0.14);
+      transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+    }
+
+    .report-link:hover {
+      background: #dce9ff;
+      border-color: #9fbee8;
+      transform: translateY(-1px);
+    }
+
     @media (max-width: 860px) {
       body {
         padding: 20px 14px 44px;
@@ -443,8 +535,12 @@
       }
 
       .hero img {
-        width: 50px;
-        height: 50px;
+        width: 82px;
+        height: 46px;
+      }
+
+      .join-link {
+        width: 100%;
       }
 
       .controls {
@@ -458,6 +554,11 @@
 
       .action-btn {
         flex: 1 1 auto;
+      }
+
+      .report-link {
+        right: 14px;
+        bottom: 12px;
       }
     }
   </style>
@@ -474,7 +575,10 @@
 
     <section class="card hero">
       <img src="urb.png" alt="__LOGO_ALT__">
-      <p>__HERO_TEXT__</p>
+      <div class="hero-content">
+        <p>__HERO_TEXT__</p>
+      </div>
+      <a class="join-link" href="__JOIN_LEADERBOARD_URL__" target="_blank" rel="noopener">__JOIN_LEADERBOARD_LABEL__</a>
     </section>
 
     <section class="card">
@@ -501,6 +605,7 @@
   </div>
 
   <div class="hint-footer">__FOOTER_HINT____FOOTER_SEPARATOR____GENERATED_LABEL__ __GENERATED_AT__</div>
+  <a class="report-link" href="__REPORT_PROBLEM_URL__" target="_blank" rel="noopener">__REPORT_PROBLEM_LABEL__</a>
 
   <div class="metric-tooltip" id="metric-tooltip"></div>
 
@@ -520,7 +625,6 @@
     const metricTooltip = document.getElementById('metric-tooltip');
 
     const metricDescriptions = strings.metric_descriptions || {};
-    const typeLabels = strings.type_labels || {};
     const headerLabels = strings.table_headers || {};
 
     const unknownEnv = strings.unknown_env || 'unknown-env';
@@ -532,8 +636,6 @@
     const showAllLabel = strings.show_all_label || 'Show all';
     const collapseFoldsLabel = strings.collapse_folds_label || 'Collapse folds';
     const mergeFoldsLabel = strings.merge_folds_label || 'Merge folds';
-
-    const typeOrder = ['normal', 'open', 'cond_open'];
 
     const collapsedData = leaderboardData.experiments || [];
     const rawData = leaderboardData.raw_experiments || leaderboardData.experiments || [];
@@ -557,8 +659,8 @@
     function normalizeExperiments(source) {
       return (source || []).map((exp) => ({
         ...exp,
-        exp_type: exp.exp_type || 'normal',
         env_config: exp.env_config || unknownEnv,
+        env_seed: exp.env_seed ?? naLabel,
         task_config: exp.task_config || unknownTask,
         network: exp.network || unknownNetwork,
       }));
@@ -574,14 +676,16 @@
     }
 
     function sortValues(key, values) {
-      if (key === 'exp_type') {
+      if (key === 'env_seed') {
         return values.sort((a, b) => {
-          const aIndex = typeOrder.indexOf(a);
-          const bIndex = typeOrder.indexOf(b);
-          if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-          if (aIndex === -1) return 1;
-          if (bIndex === -1) return -1;
-          return aIndex - bIndex;
+          const aNum = Number(a);
+          const bNum = Number(b);
+          const aIsNum = !Number.isNaN(aNum);
+          const bIsNum = !Number.isNaN(bNum);
+          if (aIsNum && bIsNum) return aNum - bNum;
+          if (aIsNum) return -1;
+          if (bIsNum) return 1;
+          return String(a).localeCompare(String(b));
         });
       }
       return values.sort((a, b) => String(a).localeCompare(String(b)));
@@ -590,15 +694,14 @@
     function buildFilterConfig(items) {
       return [
         {
-          key: 'exp_type',
-          label: strings.filter_exp_type_label || 'Experiment type',
-          values: sortValues('exp_type', uniqueValuesFrom(items, 'exp_type')),
-          display: (value) => typeLabels[value] || value,
-        },
-        {
           key: 'env_config',
           label: strings.filter_env_label || 'Env config',
           values: sortValues('env_config', uniqueValuesFrom(items, 'env_config')),
+        },
+        {
+          key: 'env_seed',
+          label: strings.filter_env_seed_label || 'Env seed',
+          values: sortValues('env_seed', uniqueValuesFrom(items, 'env_seed')),
         },
         {
           key: 'task_config',
@@ -765,6 +868,25 @@
       return value;
     }
 
+    function abbreviatedContributorName(name) {
+      const raw = String(name ?? '').trim();
+      if (!raw || raw === naLabel) return raw;
+
+      const parts = raw.split(/\s+/).filter(Boolean);
+      if (parts.length <= 1) return raw;
+
+      const lastName = parts[parts.length - 1];
+      const initials = parts
+        .slice(0, -1)
+        .map((part) => {
+          const [firstChar] = Array.from(part);
+          return firstChar ? `${firstChar.toUpperCase()}.` : '';
+        })
+        .filter(Boolean);
+
+      return [...initials, lastName].join(' ');
+    }
+
     function showMetricTooltip(text, evt) {
       metricTooltip.innerHTML = text;
       metricTooltip.classList.add('visible');
@@ -865,25 +987,13 @@
         });
       });
 
-      const extraColumns = [
-        {
-          key: 'exp_type',
-          label: strings.filter_exp_type_label || 'Experiment type',
-          format: (value) => typeLabels[value] || value,
-        },
-        {
-          key: 'env_config',
-          label: strings.filter_env_label || 'Env config',
-        },
-        {
-          key: 'task_config',
-          label: strings.filter_task_label || 'Task config',
-        },
-        {
-          key: 'network',
-          label: strings.filter_network_label || 'Traffic network',
-        },
-      ].filter((cfg) => uniqueValuesFrom(visibleExperiments, cfg.key).length > 1);
+      const extraColumns = filterConfig
+        .map((cfg) => ({
+          key: cfg.key,
+          label: cfg.label,
+          format: cfg.display,
+        }))
+        .filter((cfg) => uniqueValuesFrom(visibleExperiments, cfg.key).length > 1);
 
       const baseHeaders = [
         { key: 'rank', label: headerLabels.rank || '#', sortable: false, className: 'rank-header sort-disabled' },
@@ -891,8 +1001,8 @@
         ...extraColumns.map((cfg) => ({ key: cfg.key, label: cfg.label })),
         { key: 'algorithm', label: headerLabels.algorithm || 'Algorithm' },
         { key: 'script', label: headerLabels.script || 'Script' },
+        { key: 'script_contributor', label: headerLabels.script_contributor || 'Script contributor' },
         { key: 'alg_config', label: headerLabels.alg_config || 'Algorithm Config' },
-        { key: 'env_seed', label: headerLabels.env_seed || 'Env Seed' },
         { key: 'torch_seed', label: headerLabels.torch_seed || 'Torch Seed' },
       ];
 
@@ -996,8 +1106,47 @@
         [
           exp.algorithm || naLabel,
           exp.script || naLabel,
+        ].forEach((value) => {
+          const td = document.createElement('td');
+          td.textContent = value;
+          td.dataset.value = value;
+          tr.appendChild(td);
+        });
+
+        const contributorRaw = exp.script_contributor || naLabel;
+        const contributorDisplay = abbreviatedContributorName(contributorRaw);
+        const contributorTd = document.createElement('td');
+        contributorTd.dataset.value = contributorRaw;
+
+        const contributorWrap = document.createElement('span');
+        contributorWrap.className = 'contributor-cell';
+
+        if (exp.script_contributor_avatar) {
+          const avatar = document.createElement('img');
+          avatar.className = 'contributor-avatar';
+          avatar.src = exp.script_contributor_avatar;
+          avatar.alt = `${contributorRaw} avatar`;
+          avatar.loading = 'lazy';
+          avatar.referrerPolicy = 'no-referrer';
+          contributorWrap.appendChild(avatar);
+        }
+
+        const contributorNode = exp.script_contributor_url
+          ? document.createElement('a')
+          : document.createElement('span');
+        contributorNode.className = 'contributor-name';
+        contributorNode.textContent = contributorDisplay;
+        if (exp.script_contributor_url) {
+          contributorNode.href = exp.script_contributor_url;
+          contributorNode.target = '_blank';
+          contributorNode.rel = 'noopener';
+        }
+        contributorWrap.appendChild(contributorNode);
+        contributorTd.appendChild(contributorWrap);
+        tr.appendChild(contributorTd);
+
+        [
           exp.alg_config || naLabel,
-          exp.env_seed ?? naLabel,
           exp.torch_seed ?? naLabel,
         ].forEach((value) => {
           const td = document.createElement('td');

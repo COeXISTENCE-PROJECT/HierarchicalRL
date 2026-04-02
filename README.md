@@ -1,12 +1,22 @@
-![GitHub Release](https://img.shields.io/github/v/release/COeXISTENCE-PROJECT/urb?color=green)
-[![DOI](https://zenodo.org/badge/962568914.svg)](https://doi.org/10.5281/zenodo.17422845)
-[![Dataset](https://img.shields.io/badge/Dataset-Available-blue?logo=kaggle&logoColor=white)](https://www.kaggle.com/datasets/ukaszgorczyca/urb-networks)
-[![Citation](https://img.shields.io/badge/Cite-this%20work-blue?logo=citation-needed&logoColor=white)](https://github.com/COeXISTENCE-PROJECT/URB/blob/main/CITATION.CFF)
-[![Test scripts](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml/badge.svg?branch=main)](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml)
-[![Test baselines](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml/badge.svg)](https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml)
-![GitHub License](https://img.shields.io/github/license/COeXISTENCE-PROJECT/urb)
-[![Open in Code Ocean](https://codeocean.com/codeocean-assets/badge/open-in-code-ocean.svg)](https://codeocean.com/capsule/1896262/tree)
+<p align="center">
+  <img alt="GitHub Release" src="https://img.shields.io/github/v/release/COeXISTENCE-PROJECT/urb?color=green"/>
+  <a href="https://doi.org/10.5281/zenodo.17422845"><img alt="DOI" src="https://zenodo.org/badge/962568914.svg"/></a>
+  <a href="https://www.kaggle.com/datasets/ukaszgorczyca/urb-networks"><img alt="Dataset" src="https://img.shields.io/badge/Dataset-Available-blue?logo=kaggle&logoColor=white"/></a>
+  <a href="https://github.com/COeXISTENCE-PROJECT/URB/blob/main/CITATION.CFF"><img alt="Citation" src="https://img.shields.io/badge/Cite-this%20work-blue?logo=citation-needed&logoColor=white"/></a>
+</p>
 
+<p align="center">
+  <a href="https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml"><img alt="Test scripts" src="https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_scripts.yml/badge.svg?branch=main"/></a>
+  <a href="https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml"><img alt="Test baselines" src="https://github.com/COeXISTENCE-PROJECT/URB/actions/workflows/test_baselines.yml/badge.svg"/></a>
+  <img alt="GitHub License" src="https://img.shields.io/github/license/COeXISTENCE-PROJECT/urb"/>
+  <a href="https://codeocean.com/capsule/1896262/tree"><img alt="Open in Code Ocean" src="https://codeocean.com/codeocean-assets/badge/open-in-code-ocean.svg"/></a>
+</p>
+
+<p align="center">
+  <a href="https://coexistence-project.github.io/URB/">
+    <img alt="Official leaderboard" src="docs/official_leaderboard_badge.svg" width="294"/>
+  </a>
+</p>
 
 
 <p align="center">

@@ -27,6 +27,7 @@ from tqdm import tqdm
 
 from utils import clear_SUMO_files
 from utils import run_metrics_analysis
+from utils import script_path_for_config
 from baseline_models import get_baseline
 
 if __name__ == "__main__":
@@ -122,6 +123,7 @@ if __name__ == "__main__":
     dump_config["baseline_model"] = baseline_model
     dump_config["num_agents"] = num_agents
     dump_config["num_machines"] = num_machines
+    dump_config["script"] = script_path_for_config(__file__)
     with open(exp_config_path, 'w', encoding='utf-8') as f:
         json.dump(dump_config, f, indent=4)
 
