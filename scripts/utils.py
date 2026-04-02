@@ -3,6 +3,7 @@ import os
 import csv
 import subprocess
 import sys
+from typing import Optional
 
 def get_episodes(ep_path: str) -> list[int]:
     """Get the episodes data
@@ -136,6 +137,28 @@ def save_loss_records(records_folder: str, loss_records: list[dict], columns: li
             writer.writerow({column: row.get(column, "") for column in columns})
 
     return os.path.abspath(loss_csv_path)
+
+
+def script_path_for_config(script_file: str, repo_root: Optional[str] = None) -> str:
+    """
+    Return a repository-relative script path for exp_config.json when possible.
+    Falls back to absolute path if the script is outside of the repository root.
+    """
+    script_abs = os.path.abspath(script_file)
+    if repo_root is None:
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    else:
+        repo_root = os.path.abspath(repo_root)
+
+    try:
+        relative_path = os.path.relpath(script_abs, repo_root)
+    except ValueError:
+        return script_abs
+
+    if relative_path.startswith(".."):
+        return script_abs
+
+    return relative_path.replace(os.sep, "/")
 
 
 def run_metrics_analysis(exp_id: str, results_folder: str = "../results", verbose: bool = False) -> bool:

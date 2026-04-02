@@ -27,6 +27,7 @@ from utils           import clear_SUMO_files
 from utils           import print_agent_counts
 from utils           import run_metrics_analysis
 from utils           import save_loss_records
+from utils           import script_path_for_config
 
 ### A simplified single-step actor-only PPO implementation for single-step decisions.
 class PPO(BaseLearningModel):
@@ -214,7 +215,7 @@ if __name__ == "__main__":
     dump_config["env_config"] = env_config
     dump_config["task_config"] = task_config
     dump_config["alg_config"] = alg_config
-    dump_config["script"] = os.path.abspath(__file__)
+    dump_config["script"] = script_path_for_config(__file__)
     dump_config["algorithm"] = ALGORITHM
     dump_config["num_agents"] = num_agents
     dump_config["num_machines"] = num_machines
