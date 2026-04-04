@@ -90,7 +90,11 @@ if __name__ == "__main__":
     params.update(task_params)
     del params["desc"], alg_params, env_params, task_params
 
-    
+    share_params_agent = bool(params.get("share_params_agent", params.get("share_params", False)))
+    share_params_critic = bool(params.get("share_params_critic", True))
+    params["share_params_agent"] = share_params_agent
+    params["share_params_critic"] = share_params_critic
+
     # set params as variables in this script
     for key, value in params.items():
         globals()[key] = value
@@ -243,7 +247,7 @@ if __name__ == "__main__":
     reset_td = env.reset()
 
     
-    share_parameters_policy = False 
+    share_parameters_policy = share_params_agent
 
     policy_net = torch.nn.Sequential(
         MultiAgentMLP(
@@ -273,12 +277,13 @@ if __name__ == "__main__":
         in_keys=[("agents", "logits")],
         out_keys=[env.action_key],
         distribution_class=Categorical,
+        default_interaction_type="random",
         return_log_prob=True,
         log_prob_key=("agents", "sample_log_prob"),
     )
 
     
-    share_parameters_critic = True
+    share_parameters_critic = share_params_critic
     mappo = False  # IPPO if False
 
     critic_net = MultiAgentMLP(

@@ -93,7 +93,9 @@ if __name__ == "__main__":
     params.update(task_params)
     del params["desc"], alg_params, env_params, task_params
 
-    
+    share_params_agent = bool(params.get("share_params_agent", params.get("share_params", False)))
+    params["share_params_agent"] = share_params_agent
+
     # set params as variables in this script
     for key, value in params.items():
         globals()[key] = value
@@ -243,7 +245,7 @@ if __name__ == "__main__":
             n_agent_outputs=env.action_spec.space.n,
             n_agents=env.n_agents,
             centralised=False,
-            share_params=share_params,
+            share_params=share_params_agent,
             device=device,
             depth=mlp_depth,
             num_cells=mlp_cells,
@@ -381,9 +383,10 @@ if __name__ == "__main__":
 
     # Testing phase
     pbar = tqdm(total=test_eps, desc="Testing")
-    qnet.eval() # set the policy into evaluation mode
+    qnet_explore.eval() # keep epsilon-greedy behavior in evaluation
+    qnet_explore[1].eps.data.copy_(qnet_explore[1].eps_end)
     for episode in range(test_eps):
-        env.rollout(len(env.machine_agents), policy=qnet)
+        env.rollout(len(env.machine_agents), policy=qnet_explore)
         pbar.update()
     pbar.close()
         
