@@ -93,6 +93,13 @@ if __name__ == "__main__":
     params.update(task_params)
     del params["desc"], alg_params, env_params, task_params
 
+    share_params_agent = bool(params["share_params_agent"])
+    params["share_params_agent"] = share_params_agent
+
+    policy_network_depth = int(params["policy_network_depth"])
+    policy_network_num_cells = int(params["policy_network_num_cells"])
+    params["policy_network_depth"] = policy_network_depth
+    params["policy_network_num_cells"] = policy_network_num_cells
 
     # set params as variables in this script
     for key, value in params.items():
@@ -246,10 +253,10 @@ if __name__ == "__main__":
             n_agent_outputs=env.action_spec.space.n,
             n_agents=env.n_agents,
             centralised=False,
-            share_params=False,
+            share_params=share_params_agent,
             device=device,
-            depth=mlp_depth,
-            num_cells=mlp_cells,
+            depth=policy_network_depth,
+            num_cells=policy_network_num_cells,
             activation_class=nn.ReLU,
         )
 
@@ -363,9 +370,10 @@ if __name__ == "__main__":
     
     # Testing phase
     pbar = tqdm(total=test_eps, desc="Test phase")
-    qnet.eval() # set the policy into evaluation mode
+    qnet_explore.eval() # keep epsilon-greedy behavior in evaluation
+    qnet_explore[1].eps.data.copy_(qnet_explore[1].eps_end)
     for episode in range(test_eps):
-        env.rollout(len(env.machine_agents), policy=qnet)
+        env.rollout(len(env.machine_agents), policy=qnet_explore)
         pbar.update()
     pbar.close()
         
