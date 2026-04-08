@@ -474,6 +474,105 @@
       transform: translateY(0);
     }
 
+    .hover-card {
+      position: fixed;
+      z-index: 75;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(5px);
+      transition: opacity 0.1s ease, transform 0.1s ease;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 18px 40px rgba(9, 14, 20, 0.18);
+      padding: 12px;
+    }
+
+    .hover-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hover-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .preview-card {
+      width: 520px;
+      max-width: 52vw;
+    }
+
+    .preview-img {
+      width: 100%;
+      height: auto;
+      max-height: 340px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+    }
+
+    .hover-fallback {
+      display: none;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+      border-radius: 10px;
+      border: 1px dashed #cbd5df;
+      background: #f8fafc;
+    }
+
+    .preview-card.missing .preview-img {
+      display: none;
+    }
+
+    .preview-card.missing .hover-fallback {
+      display: block;
+    }
+
+    .config-card {
+      width: 440px;
+      max-width: 44vw;
+      max-height: 520px;
+    }
+
+    .config-pre {
+      margin: 0;
+      max-height: 430px;
+      overflow: auto;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #f7fafc;
+      color: #24303a;
+      font-size: 12px;
+      line-height: 1.5;
+      font-family: 'IBM Plex Mono', 'Consolas', monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .config-card .hover-fallback {
+      display: block;
+      padding: 16px 14px;
+    }
+
+    .config-card.ready .hover-fallback {
+      display: none;
+    }
+
+    .config-card.ready .config-pre {
+      display: block;
+    }
+
+    .config-card .config-pre {
+      display: none;
+    }
+
     td.metric-best[data-best="max"] {
       background: #eaf6f2;
       color: #184f43;
@@ -560,6 +659,11 @@
         right: 14px;
         bottom: 12px;
       }
+
+      .preview-card,
+      .config-card {
+        max-width: calc(100vw - 28px);
+      }
     }
   </style>
 </head>
@@ -607,6 +711,18 @@
   <div class="hint-footer">__FOOTER_HINT____FOOTER_SEPARATOR____GENERATED_LABEL__ __GENERATED_AT__</div>
   <a class="report-link" href="__REPORT_PROBLEM_URL__" target="_blank" rel="noopener">__REPORT_PROBLEM_LABEL__</a>
 
+  <div class="hover-card preview-card" id="preview-card">
+    <div class="hover-card-title" id="preview-title">Travel time plot</div>
+    <img class="preview-img" id="preview-img" alt="">
+    <div class="hover-fallback" id="preview-fallback">Preview unavailable.</div>
+  </div>
+
+  <div class="hover-card config-card" id="config-card">
+    <div class="hover-card-title" id="config-title">Config</div>
+    <pre class="config-pre" id="config-pre"></pre>
+    <div class="hover-fallback" id="config-fallback">Loading config...</div>
+  </div>
+
   <div class="metric-tooltip" id="metric-tooltip"></div>
 
   <script>
@@ -622,6 +738,14 @@
     const deselectBtn = document.getElementById('deselect-btn');
     const foldToggleBtn = document.getElementById('fold-toggle-btn');
     const controlsHint = document.getElementById('controls-hint');
+    const previewCard = document.getElementById('preview-card');
+    const previewTitle = document.getElementById('preview-title');
+    const previewImg = document.getElementById('preview-img');
+    const previewFallback = document.getElementById('preview-fallback');
+    const configCard = document.getElementById('config-card');
+    const configTitle = document.getElementById('config-title');
+    const configPre = document.getElementById('config-pre');
+    const configFallback = document.getElementById('config-fallback');
     const metricTooltip = document.getElementById('metric-tooltip');
 
     const metricDescriptions = strings.metric_descriptions || {};
@@ -647,6 +771,10 @@
 
     let selectedRowIds = new Set();
     let isolateSelected = false;
+    let previewCandidates = [];
+    let previewCandidateIndex = 0;
+    const configCache = new Map();
+    let activeConfigToken = 0;
 
     function formatString(template, values) {
       if (!template) return '';
@@ -887,6 +1015,130 @@
       return [...initials, lastName].join(' ');
     }
 
+    function toRawGitHubUrl(url) {
+      if (!/^https?:\/\//i.test(url)) return url;
+      if (url.includes('raw.githubusercontent.com')) return url;
+      if (!url.includes('github.com')) return url;
+
+      try {
+        const parsed = new URL(url);
+        const parts = parsed.pathname.split('/').filter(Boolean);
+        if (parts.length < 4) return url;
+        const [owner, repo, kind, branch, ...rest] = parts;
+        if (kind !== 'tree' && kind !== 'blob') return url;
+        const rawPath = ['/', owner, repo, branch, ...rest].join('/');
+        return `https://raw.githubusercontent.com${rawPath}`;
+      } catch (err) {
+        return url;
+      }
+    }
+
+    function positionHoverCard(card, evt) {
+      const padding = 14;
+      const { innerWidth, innerHeight } = window;
+      const rect = card.getBoundingClientRect();
+      let left = evt.clientX + padding;
+      let top = evt.clientY + padding;
+      if (left + rect.width > innerWidth) left = evt.clientX - rect.width - padding;
+      if (top + rect.height > innerHeight) top = evt.clientY - rect.height - padding;
+      card.style.left = `${Math.max(padding, left)}px`;
+      card.style.top = `${Math.max(padding, top)}px`;
+    }
+
+    function previewCandidatesFor(exp) {
+      const candidates = [];
+      if (exp.plot_preview_url) candidates.push(exp.plot_preview_url);
+      if (exp.exp_link) {
+        const rawBase = toRawGitHubUrl(String(exp.exp_link).replace(/\/$/, ''));
+        const fallbackUrl = `${rawBase}/plots/travel_times.png`;
+        if (!candidates.includes(fallbackUrl)) candidates.push(fallbackUrl);
+      }
+      return candidates.filter(Boolean);
+    }
+
+    function showPreview(expId, candidates, evt) {
+      hideConfigPreview();
+      previewCandidates = candidates || [];
+      previewCandidateIndex = 0;
+      if (!previewCandidates.length) {
+        hidePreview();
+        return;
+      }
+
+      previewTitle.textContent = `Travel time plot · ${expId}`;
+      previewFallback.textContent = 'Preview unavailable.';
+      previewCard.classList.remove('missing');
+      previewImg.src = previewCandidates[0];
+      previewImg.alt = `Travel time plot for ${expId}`;
+      previewCard.classList.add('visible');
+      positionHoverCard(previewCard, evt);
+    }
+
+    function hidePreview() {
+      previewCard.classList.remove('visible');
+    }
+
+    function formatConfigText(text) {
+      const trimmed = String(text || '').trim();
+      if (!trimmed) return '';
+      try {
+        return JSON.stringify(JSON.parse(trimmed), null, 2);
+      } catch (err) {
+        return trimmed;
+      }
+    }
+
+    function renderConfigPreview(title, content, state) {
+      configTitle.textContent = title;
+      configPre.textContent = state === 'ready' ? content : '';
+      configFallback.textContent = content;
+      configCard.classList.remove('ready');
+      if (state === 'ready') configCard.classList.add('ready');
+    }
+
+    async function showConfigPreview(title, rawUrl, evt) {
+      hidePreview();
+      activeConfigToken += 1;
+      const token = activeConfigToken;
+      configCard.classList.add('visible');
+      positionHoverCard(configCard, evt);
+
+      if (!rawUrl) {
+        renderConfigPreview(title, 'Config file not available.', 'missing');
+        return;
+      }
+
+      if (configCache.has(rawUrl)) {
+        renderConfigPreview(title, configCache.get(rawUrl), 'ready');
+        return;
+      }
+
+      renderConfigPreview(title, 'Loading config...', 'loading');
+
+      try {
+        const response = await fetch(rawUrl, { cache: 'force-cache' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = formatConfigText(await response.text());
+        configCache.set(rawUrl, text || '{}');
+        if (token !== activeConfigToken) return;
+        renderConfigPreview(title, configCache.get(rawUrl), 'ready');
+      } catch (err) {
+        if (token !== activeConfigToken) return;
+        renderConfigPreview(title, 'Config file could not be loaded.', 'missing');
+      }
+    }
+
+    function hideConfigPreview() {
+      activeConfigToken += 1;
+      configCard.classList.remove('visible');
+    }
+
+    function attachConfigHover(node, title, rawUrl) {
+      node.addEventListener('mouseenter', (evt) => showConfigPreview(title, rawUrl, evt));
+      node.addEventListener('mousemove', (evt) => positionHoverCard(configCard, evt));
+      node.addEventListener('mouseleave', hideConfigPreview);
+    }
+
     function showMetricTooltip(text, evt) {
       metricTooltip.innerHTML = text;
       metricTooltip.classList.add('visible');
@@ -911,6 +1163,19 @@
       metricTooltip.style.left = `${Math.max(padding, left)}px`;
       metricTooltip.style.top = `${Math.max(padding, top)}px`;
     }
+
+    previewImg.addEventListener('error', () => {
+      if (previewCandidateIndex + 1 < previewCandidates.length) {
+        previewCandidateIndex += 1;
+        previewImg.src = previewCandidates[previewCandidateIndex];
+        return;
+      }
+      previewCard.classList.add('missing');
+    });
+
+    previewImg.addEventListener('load', () => {
+      previewCard.classList.remove('missing');
+    });
 
     function metricPreference(metricKey) {
       const key = String(metricKey || '').toLowerCase();
@@ -1091,6 +1356,11 @@
           expWrap.appendChild(badge);
         }
 
+        const previewList = previewCandidatesFor(exp);
+        expWrap.addEventListener('mouseenter', (evt) => showPreview(expId, previewList, evt));
+        expWrap.addEventListener('mousemove', (evt) => positionHoverCard(previewCard, evt));
+        expWrap.addEventListener('mouseleave', hidePreview);
+
         expTd.appendChild(expWrap);
         tr.appendChild(expTd);
 
@@ -1100,6 +1370,11 @@
           const value = raw === null || raw === undefined || raw === '' ? naLabel : raw;
           td.textContent = col.format ? col.format(value) : value;
           td.dataset.value = raw ?? '';
+          if (col.key === 'env_config' && raw) {
+            attachConfigHover(td, `Env config · ${raw}.json`, exp.env_config_raw_url || '');
+          } else if (col.key === 'task_config' && raw) {
+            attachConfigHover(td, `Task config · ${raw}.json`, exp.task_config_raw_url || '');
+          }
           tr.appendChild(td);
         });
 
@@ -1146,12 +1421,20 @@
         tr.appendChild(contributorTd);
 
         [
-          exp.alg_config || naLabel,
-          exp.torch_seed ?? naLabel,
-        ].forEach((value) => {
+          { key: 'alg_config', value: exp.alg_config || naLabel },
+          { key: 'torch_seed', value: exp.torch_seed ?? naLabel },
+        ].forEach((cell) => {
           const td = document.createElement('td');
-          td.textContent = value;
-          td.dataset.value = value;
+          td.textContent = cell.value;
+          td.dataset.value = cell.value;
+          if (cell.key === 'alg_config' && exp.alg_config) {
+            const titleParts = [exp.algorithm || 'algorithm', `${exp.alg_config}.json`];
+            attachConfigHover(
+              td,
+              `Algorithm config · ${titleParts.join('/')}`,
+              exp.alg_config_raw_url || ''
+            );
+          }
           tr.appendChild(td);
         });
 
