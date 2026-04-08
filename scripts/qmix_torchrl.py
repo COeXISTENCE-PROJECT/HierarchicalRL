@@ -4,6 +4,7 @@ The QMIX implementation is based on: https://github.com/pytorch/rl/blob/main/sot
 """
 
 import os
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
 import argparse
@@ -19,7 +20,6 @@ from torch import nn
 from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.envs.libs.pettingzoo import PettingZooWrapper
 from torchrl.envs.transforms import TransformedEnv, RewardSum
-from torchrl.envs.utils import check_env_specs
 from torch import nn
 from torchrl.collectors import SyncDataCollector
 from torchrl.data import TensorDictReplayBuffer
@@ -31,7 +31,10 @@ from torchrl.objectives import SoftUpdate, ValueEstimators
 from torchrl.objectives.multiagent.qmixer import QMixerLoss
 from tqdm import tqdm
 
+from utils import AppendODEmbedding
 from utils import clear_SUMO_files
+from utils import get_od_ids_for_group
+from utils import print_agent_counts
 from utils import run_metrics_analysis
 from utils import save_loss_records
 from utils import script_path_for_config
@@ -93,9 +96,6 @@ if __name__ == "__main__":
     params.update(task_params)
     del params["desc"], alg_params, env_params, task_params
 
-    share_params_agent = bool(params.get("share_params_agent", params.get("share_params", False)))
-    params["share_params_agent"] = share_params_agent
-
     # set params as variables in this script
     for key, value in params.items():
         globals()[key] = value
@@ -124,6 +124,9 @@ if __name__ == "__main__":
             content = f.read()
         with open(new_agents_csv_path, 'w', encoding='utf-8') as f:
             f.write(content)
+        max_start_time = pd.read_csv(new_agents_csv_path)['start_time'].max()
+    else:
+        raise FileNotFoundError(f"Agents CSV file not found at {agents_csv_path}. Please check the network folder.")
             
     num_machines = int(num_agents * ratio_machines)
     training_episodes = agent_frames_per_batch * n_iters
@@ -156,17 +159,23 @@ if __name__ == "__main__":
         save_detectors_info = False,
         agent_parameters = {
             "new_machines_after_mutation": num_machines, 
-            "human_parameters" : {
-                "model" : human_model
+            "human_parameters": {
+                "model": human_model,
+                "alpha": human_alpha,
+                "beta": human_beta,
+                "beta_randomness": human_beta_randomness,
+                "deterministic": human_deterministic,
             },
             "machine_parameters" :{
                 "behavior" : av_behavior,
+                "observation_type" : observations
             }
         },
         simulator_parameters = {
             "network_name" : network,
             "custom_network_folder" : custom_network_folder,
             "sumo_type" : "sumo",
+            "simulation_timesteps" : max_start_time
         }, 
         environment_parameters = {
             "save_every" : save_every,
@@ -185,17 +194,12 @@ if __name__ == "__main__":
             "number_of_paths" : number_of_paths,
             "beta" : path_gen_beta,
             "num_samples" : num_samples,
+            "path_gen_workers" : path_gen_workers,
             "visualize_paths" : False
         } 
     )
 
-    print(f"""
-    Agents in the traffic:
-    • Total agents           : {len(env.all_agents)}
-    • Human agents           : {len(env.human_agents)}
-    • AV agents              : {len(env.machine_agents)}
-    """)
-    
+    print_agent_counts(env)
     env.start()
     env.reset()
 
@@ -208,16 +212,14 @@ if __name__ == "__main__":
     
     #  Mutation
     env.mutation(disable_human_learning = not should_humans_adapt, mutation_start_percentile = -1)
-    
-    print(f"""
-    Agents in the traffic:
-    • Total agents           : {len(env.all_agents)}
-    • Human agents           : {len(env.human_agents)}
-    • AV agents              : {len(env.machine_agents)}
-    """)
+    print_agent_counts(env)
     
     
-    group = {'agents': [str(machine.id) for machine in env.machine_agents]}
+    group_agent_ids = [str(machine.id) for machine in env.machine_agents]
+    group = {"agents": group_agent_ids}
+    # Keep OD ids aligned with the TorchRL group order.
+    od_ids = get_od_ids_for_group(group_agent_ids, env.machine_agents, len(destinations))
+    num_od_pairs = len(origins) * len(destinations)
 
     env = PettingZooWrapper(
         env=env,
@@ -235,14 +237,22 @@ if __name__ == "__main__":
         RewardSum(in_keys=[env.reward_key], out_keys=[("agents", "episode_reward")]),
     )
     
-    check_env_specs(env)
     env.reset()
+
+    obs_dim = env.observation_spec["agents", "observation"].shape[-1]
+    obs_with_od_dim = obs_dim + od_embedding_dim
+    # Append a learned OD embedding before the Q-network.
+    od_encoder = TensorDictModule(
+        AppendODEmbedding(od_ids, num_od_pairs, od_embedding_dim).to(device),
+        in_keys=[("agents", "observation")],
+        out_keys=[("agents", "observation_with_od")],
+    )
 
      
     # Policy network
     # Instantiate an `MPL` that can be used in multi-agent contexts.
     net = MultiAgentMLP(
-            n_agent_inputs=env.observation_spec["agents", "observation"].shape[-1],
+            n_agent_inputs=obs_with_od_dim,
             n_agent_outputs=env.action_spec.space.n,
             n_agents=env.n_agents,
             centralised=False,
@@ -254,7 +264,7 @@ if __name__ == "__main__":
         )
 
     module = TensorDictModule(
-            net, in_keys=[("agents", "observation")], out_keys=[("agents", "action_value")]
+            net, in_keys=[("agents", "observation_with_od")], out_keys=[("agents", "action_value")]
     )
 
     value_module = QValueModule(
@@ -268,7 +278,7 @@ if __name__ == "__main__":
         action_space=None,
     )
 
-    qnet = SafeSequential(module, value_module)
+    qnet = SafeSequential(od_encoder, module, value_module)
 
     
     qnet_explore = TensorDictSequential(
@@ -284,14 +294,13 @@ if __name__ == "__main__":
     
     mixer = TensorDictModule(
         module=QMixer(
-            state_shape=env.observation_spec[
-                "agents", "observation"
-            ].shape,
+            state_shape=torch.Size([env.n_agents, obs_with_od_dim]),
             mixing_embed_dim=mixing_embed_dim,
             n_agents=env.n_agents,
             device=device,
         ),
-        in_keys=[("agents", "chosen_action_value"), ("agents", "observation")],
+        # Let the mixer see the same OD-aware state as the local Q-network.
+        in_keys=[("agents", "chosen_action_value"), ("agents", "observation_with_od")],
         out_keys=["chosen_action_value"],
     )
 
