@@ -15,5 +15,6 @@
     "critic_network_depth": 3,
     "critic_network_num_cells": 64,
     "share_params_agent": false,
-    "share_params_critic": false
+    "share_params_critic": false,
+    "od_embedding_dim": 8
 }
