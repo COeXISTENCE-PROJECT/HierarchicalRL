@@ -75,6 +75,8 @@ docs/_build/
 .pybuilder/
 target/
 
+.agents/
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
@@ -186,3 +188,4 @@ networks/.DS_Store
 networks/*/.DS_Store
 
 docs/leaderboard/
+server_scripts/

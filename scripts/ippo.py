@@ -231,12 +231,16 @@ if __name__ == "__main__":
         save_detectors_info = False,
         agent_parameters = {
             "new_machines_after_mutation": num_machines, 
-            "human_parameters" : {
-                "model" : human_model
+            "human_parameters": {
+                "model": human_model,
+                "alpha": human_alpha,
+                "beta": human_beta,
+                "beta_randomness": human_beta_randomness,
+                "deterministic": human_deterministic,
             },
             "machine_parameters" : {
                 "behavior" : av_behavior,
-                "observation_type" : "previous_agents_plus_start_time"
+                "observation_type" : observations
             }
         },
         environment_parameters = {
@@ -262,6 +266,7 @@ if __name__ == "__main__":
             "number_of_paths" : number_of_paths,
             "beta" : path_gen_beta,
             "num_samples" : num_samples,
+            "path_gen_workers" : path_gen_workers,
             "visualize_paths" : False
         } 
     )

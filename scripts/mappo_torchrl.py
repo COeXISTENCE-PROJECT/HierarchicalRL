@@ -4,6 +4,7 @@ The MAPPO implementation is based on: https://docs.pytorch.org/rl/stable/tutoria
 """
 
 import os
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
 import argparse
@@ -15,12 +16,11 @@ import pandas as pd
 import torch
 
 from routerl import TrafficEnvironment
-from tensordict.nn import TensorDictModule
+from tensordict.nn import TensorDictModule, TensorDictSequential
 from torchrl.collectors import SyncDataCollector
 from torch.distributions import Categorical
 from torchrl.envs.libs.pettingzoo import PettingZooWrapper
 from torchrl.envs.transforms import TransformedEnv, RewardSum
-from torchrl.envs.utils import check_env_specs
 from torchrl.data.replay_buffers import ReplayBuffer
 from torchrl.data.replay_buffers.samplers import SamplerWithoutReplacement
 from torchrl.data.replay_buffers.storages import LazyTensorStorage
@@ -29,7 +29,10 @@ from torchrl.objectives.value import GAE
 from torchrl.objectives import ClipPPOLoss, ValueEstimators
 from tqdm import tqdm
 
+from utils import AppendODEmbedding
 from utils import clear_SUMO_files
+from utils import get_od_ids_for_group
+from utils import print_agent_counts
 from utils import run_metrics_analysis
 from utils import save_loss_records
 from utils import script_path_for_config
@@ -88,11 +91,6 @@ if __name__ == "__main__":
     params.update(task_params)
     del params["desc"], alg_params, env_params, task_params
 
-    share_params_agent = bool(params.get("share_params_agent", params.get("share_params", False)))
-    share_params_critic = bool(params.get("share_params_critic", False))
-    params["share_params_agent"] = share_params_agent
-    params["share_params_critic"] = share_params_critic
-
     # set params as variables in this script
     for key, value in params.items():
         globals()[key] = value
@@ -119,6 +117,9 @@ if __name__ == "__main__":
             content = f.read()
         with open(new_agents_csv_path, 'w', encoding='utf-8') as f:
             f.write(content)
+        max_start_time = pd.read_csv(new_agents_csv_path)['start_time'].max()
+    else:
+        raise FileNotFoundError(f"Agents CSV file not found at {agents_csv_path}. Please check the network folder.")
             
     num_machines = int(num_agents * ratio_machines)
     training_episodes = agent_frames_per_batch * n_iters
@@ -151,11 +152,16 @@ if __name__ == "__main__":
         save_detectors_info = False,
         agent_parameters = {
             "new_machines_after_mutation": num_machines, 
-            "human_parameters" : {
-                "model" : human_model
+            "human_parameters": {
+                "model": human_model,
+                "alpha": human_alpha,
+                "beta": human_beta,
+                "beta_randomness": human_beta_randomness,
+                "deterministic": human_deterministic,
             },
             "machine_parameters" :{
                 "behavior" : av_behavior,
+                "observation_type" : observations
             }
         },
         environment_parameters = {
@@ -165,6 +171,7 @@ if __name__ == "__main__":
             "network_name" : network,
             "custom_network_folder" : custom_network_folder,
             "sumo_type" : "sumo",
+            "simulation_timesteps" : max_start_time
         }, 
         plotter_parameters = {
             "phases" : phases,
@@ -180,17 +187,12 @@ if __name__ == "__main__":
             "number_of_paths" : number_of_paths,
             "beta" : path_gen_beta,
             "num_samples" : num_samples,
+            "path_gen_workers" : path_gen_workers,
             "visualize_paths" : False
         } 
     )
 
-    print(f"""
-    Agents in the traffic:
-    • Total agents           : {len(env.all_agents)}
-    • Human agents           : {len(env.human_agents)}
-    • AV agents              : {len(env.machine_agents)}
-    """)
-
+    print_agent_counts(env)
     env.start()
     res = env.reset()
      
@@ -203,16 +205,14 @@ if __name__ == "__main__":
      
     # Mutation
     env.mutation(disable_human_learning = not should_humans_adapt, mutation_start_percentile = -1)
-
-    print(f"""
-    Agents in the traffic:
-    • Total agents           : {len(env.all_agents)}
-    • Human agents           : {len(env.human_agents)}
-    • AV agents              : {len(env.machine_agents)}
-    """)
+    print_agent_counts(env)
 
     
-    group = {'agents': [str(machine.id) for machine in env.machine_agents]}
+    group_agent_ids = [str(machine.id) for machine in env.machine_agents]
+    group = {"agents": group_agent_ids}
+    # Keep OD ids aligned with the TorchRL group order.
+    od_ids = get_od_ids_for_group(group_agent_ids, env.machine_agents, len(destinations))
+    num_od_pairs = len(origins) * len(destinations)
 
     env = PettingZooWrapper(
         env=env,
@@ -229,18 +229,23 @@ if __name__ == "__main__":
         RewardSum(in_keys=[env.reward_key], out_keys=[("agents", "episode_reward")]),
     )
 
-    
-    check_env_specs(env)
     reset_td = env.reset()
-    share_parameters_policy = share_params_agent
+    obs_dim = env.observation_spec["agents", "observation"].shape[-1]
+    obs_with_od_dim = obs_dim + od_embedding_dim
+    # Append a learned OD embedding before the policy network.
+    policy_od_encoder = TensorDictModule(
+        AppendODEmbedding(od_ids, num_od_pairs, od_embedding_dim).to(device),
+        in_keys=[("agents", "observation")],
+        out_keys=[("agents", "observation_with_od")],
+    )
 
     policy_net = torch.nn.Sequential(
         MultiAgentMLP(
-            n_agent_inputs = env.observation_spec["agents", "observation"].shape[-1],
+            n_agent_inputs = obs_with_od_dim,
             n_agent_outputs = env.action_spec.space.n,
             n_agents = env.n_agents,
             centralised=False,
-            share_params=share_parameters_policy,
+            share_params=share_params_agent,
             device=device,
             depth=policy_network_depth,
             num_cells=policy_network_num_cells,
@@ -248,11 +253,13 @@ if __name__ == "__main__":
         ),
     )
 
-    policy_module = TensorDictModule(
+    policy_logits_module = TensorDictModule(
         policy_net,
-        in_keys=[("agents", "observation")],
+        in_keys=[("agents", "observation_with_od")],
         out_keys=[("agents", "logits")],
     )
+
+    policy_module = TensorDictSequential(policy_od_encoder, policy_logits_module)
 
     policy = ProbabilisticActor(
         module=policy_module,
@@ -265,26 +272,31 @@ if __name__ == "__main__":
         log_prob_key=("agents", "sample_log_prob"),
     )
 
-    share_parameters_critic = share_params_critic
-    mappo = True  # IPPO if False
+    # Critic keeps its own OD embedding, just like it keeps its own network.
+    critic_od_encoder = TensorDictModule(
+        AppendODEmbedding(od_ids, num_od_pairs, od_embedding_dim).to(device),
+        in_keys=[("agents", "observation")],
+        out_keys=[("agents", "observation_with_od")],
+    )
 
     critic_net = MultiAgentMLP(
-        n_agent_inputs=env.observation_spec["agents", "observation"].shape[-1],
+        n_agent_inputs=obs_with_od_dim,
         n_agent_outputs=1, 
         n_agents=env.n_agents,
-        centralised=mappo,
-        share_params=share_parameters_critic,
+        centralised=True, # MAPPO critic is centralized
+        share_params=share_params_critic,
         device=device,
         depth=critic_network_depth,
         num_cells=critic_network_num_cells,
         activation_class=torch.nn.ReLU,
     )
 
-    critic = TensorDictModule(
+    critic_value_module = TensorDictModule(
         module=critic_net,
-        in_keys=[("agents", "observation")],
+        in_keys=[("agents", "observation_with_od")],
         out_keys=[("agents", "state_value")],
     )
+    critic = TensorDictSequential(critic_od_encoder, critic_value_module)
 
      
     # Collector

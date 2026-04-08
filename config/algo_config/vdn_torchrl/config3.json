@@ -14,5 +14,6 @@
     "eps_greedy_end": 0.03,
     "mixing_embed_dim": 256,
     "exploration_fraction": 0.7,
-    "share_params_agent": true
+    "share_params_agent": true,
+    "od_embedding_dim": 8
 }

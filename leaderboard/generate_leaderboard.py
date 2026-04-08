@@ -17,6 +17,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
+from urllib.parse import urlparse
 
 
 METRIC_FILENAMES = [
@@ -539,6 +540,64 @@ def build_experiment_links(
             exp["exp_link"] = relative
 
 
+def infer_raw_repo_base(repo_url: str) -> str:
+    normalized = (repo_url or "").strip().rstrip("/")
+    if not normalized or "github.com" not in normalized:
+        return ""
+
+    try:
+        parsed = urlparse(normalized)
+    except ValueError:
+        return ""
+
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) < 2:
+        return ""
+
+    owner, repo = parts[0], parts[1]
+    branch = "main"
+    suffix_parts: List[str] = []
+
+    if len(parts) >= 4 and parts[2] in {"tree", "blob"}:
+        branch = parts[3]
+        suffix_parts = parts[4:]
+
+    raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}"
+    if suffix_parts:
+        raw_base = f"{raw_base}/{'/'.join(suffix_parts)}"
+    return raw_base
+
+
+def attach_hover_urls(experiments: List[Dict], raw_repo_base: str) -> None:
+    base = (raw_repo_base or "").rstrip("/")
+    for exp in experiments:
+        exp["plot_preview_url"] = ""
+        exp["alg_config_raw_url"] = ""
+        exp["task_config_raw_url"] = ""
+        exp["env_config_raw_url"] = ""
+
+        if not base:
+            continue
+
+        exp_path = str(exp.get("exp_path") or "").lstrip("/")
+        if exp_path:
+            exp["plot_preview_url"] = f"{base}/{exp_path}/plots/travel_times.png"
+
+        algorithm = str(exp.get("algorithm") or "").strip()
+        alg_config = str(exp.get("alg_config") or "").strip()
+        task_config = str(exp.get("task_config") or "").strip()
+        env_config = str(exp.get("env_config") or "").strip()
+
+        if algorithm and alg_config:
+            exp["alg_config_raw_url"] = (
+                f"{base}/config/algo_config/{algorithm}/{alg_config}.json"
+            )
+        if task_config:
+            exp["task_config_raw_url"] = f"{base}/config/task_config/{task_config}.json"
+        if env_config:
+            exp["env_config_raw_url"] = f"{base}/config/env_config/{env_config}.json"
+
+
 def infer_default_repo_url(strings: Dict) -> str:
     title_link_url = (strings.get("title_link_url") or "").strip()
     if not title_link_url or "github.com" not in title_link_url:
@@ -598,12 +657,16 @@ def main(args: Optional[Sequence[str]] = None) -> None:
     repo_url = parsed.repo_url or infer_default_repo_url(strings)
     build_experiment_links(raw_experiments, repo_url, parsed.local_link_prefix)
     build_experiment_links(experiments, repo_url, parsed.local_link_prefix)
+    raw_repo_base = infer_raw_repo_base(repo_url)
+    attach_hover_urls(raw_experiments, raw_repo_base)
+    attach_hover_urls(experiments, raw_repo_base)
 
     payload = {
         "generated_at": dt.datetime.now(dt.timezone.utc)
         .isoformat(timespec="seconds")
         .replace("+00:00", "Z"),
         "results_dir": str(parsed.results_dir),
+        "raw_repo_base": raw_repo_base,
         "experiments": experiments,
         "raw_experiments": raw_experiments,
         "strings": strings,

@@ -224,12 +224,16 @@ if __name__ == "__main__":
         save_detectors_info = False,
         agent_parameters = {
             "new_machines_after_mutation": num_machines, 
-            "human_parameters" : {
-                "model" : human_model
+            "human_parameters": {
+                "model": human_model,
+                "alpha": human_alpha,
+                "beta": human_beta,
+                "beta_randomness": human_beta_randomness,
+                "deterministic": human_deterministic,
             },
             "machine_parameters" : {
                 "behavior" : av_behavior,
-                "observation_type" : "previous_agents_plus_start_time"
+                "observation_type" : observations
             }
         },
         environment_parameters = {
@@ -238,7 +242,8 @@ if __name__ == "__main__":
         simulator_parameters = {
             "network_name" : network,
             "custom_network_folder" : custom_network_folder,
-            "sumo_type" : "sumo"
+            "sumo_type" : "sumo",
+            "simulation_timesteps" : 180
         }, 
         plotter_parameters = {
             "phases" : phases,
@@ -254,6 +259,7 @@ if __name__ == "__main__":
             "number_of_paths" : number_of_paths,
             "beta" : path_gen_beta,
             "num_samples" : num_samples,
+            "path_gen_workers" : path_gen_workers,
             "visualize_paths" : False
         } 
     )
@@ -273,10 +279,11 @@ if __name__ == "__main__":
     # Mutation
     env.mutation(disable_human_learning = not should_humans_adapt, mutation_start_percentile = -1)
     print_agent_counts(env)
+    obs_size = env.observation_space(env.possible_agents[0]).shape[0]
     
     # Set policies for machine agents
     for idx in range(len(env.machine_agents)):
-        env.machine_agents[idx].model = DQN(env.machine_agents[idx].action_space_size+1, env.machine_agents[idx].action_space_size, 
+        env.machine_agents[idx].model = DQN(obs_size, env.machine_agents[idx].action_space_size, 
                                             device=device, eps_init=eps_init, eps_decay=eps_decay,
                                             buffer_size=buffer_size, batch_size=batch_size, lr=lr, 
                                             num_epochs=num_epochs, num_hidden=num_hidden, widths=widths)
