@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <input>
+        <net-file value="../../networks/ingolstadt_custom/ingolstadt_custom.net.xml"/>
+        <route-files value="visualization_similarity_measure.rou.xml"/>
+        <!-- <route-files value="visualization_k_prototypes.rou.xml"/> -->
+    </input>
+</configuration>
