@@ -1,22 +1,26 @@
-# K-PROTOTYPES CLUSTERING SCRIPT
+# K-PROTOTYPES CLUSTERING SCRIPT WITH ROAD NETWORK DISTANCES
 
 # This script groups vehicles based on their departure time and physical route
 # It operates in two stages to handle different data types (time is continuous, map zone is categorical)
-
+# Using K-Medoids instead of K-Means to ensure that cluster centers are actual data points (vehicles) rather than virtual averages
+# Using a precomputed distance matrix based on shortest path distances in the road network instead of Eu
 import pandas as pd
 import random
-import math
+import json
 
-NUM_OF_ZONES = 5
+NUM_OF_ZONES = 8
 FINAL_CLUSTERS_NUM = 20 # Target number of final clusters
-TIME_WEIGHT = 1.0 # How heavily the algorithm penalizes for differences in departure time
-SPACE_WEIGHT = 8.0 # How heavily the algorithm penalizes for departing from/arriving at a different zone
-max_iters = 50
+TIME_WEIGHT = 5.0 # How heavily the algorithm penalizes for differences in departure time
+SPACE_WEIGHT = 95.0 # How heavily the algorithm penalizes for departing from/arriving at a different zone
+max_iters = 100
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # Load the input data with already calculated X and Y coordinates
 df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
+# Load the previously generated road network distance matrix
+with open('clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json', 'r') as f:
+    dist_matrix = json.load(f)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 print("Clustering origin and destination points ({NUM_OF_ZONES} zones each)")
@@ -24,43 +28,55 @@ print("Clustering origin and destination points ({NUM_OF_ZONES} zones each)")
 # STAGE 1 (Spatial Clustering - K-Means):
 # Ignores time, analyzes only the X and Y coordinates of the vehicles 
 # Divides the city into K zones (e.g., 5) for origin points and K zones for destination points 
-# Instead of exact coordinates, vehicles receive zone labels (e.g., "departs from zone 2, goes to zone 4")
-def simple_spatial_kmeans(coords_list, K=NUM_OF_ZONES, iters=30):
-    centroids = random.sample(coords_list, K)
+# Instead of exact coordinates, vehicles receive zone labels (e.g., "departs from zone 2, goes to zone 4").
+def simple_network_kmedoids(edge_list, K=NUM_OF_ZONES, iters=30):
+    unique_edges = list(set(edge_list))
+    unique_edges = [str(e) for e in unique_edges if pd.notna(e)]
+    medoids = random.sample(unique_edges, K)
     
     for _ in range(iters):
         clusters = []
-        # Assign each point to the nearest center
-        for pt in coords_list:
-            dists = [math.sqrt((pt[0]-c[0])**2 + (pt[1]-c[1])**2) for c in centroids]
+        # Assign each point to the nearest medoid using the distance matrix
+        for edge in edge_list:
+            edge_str = str(edge)
+            dists = [dist_matrix[edge_str][m] for m in medoids]
             clusters.append(dists.index(min(dists)))
         
-        # Move zone centers to the average position of the assigned points
-        new_centroids = []
+        # Move zone centers to the "most central" edge in that cluster
+        new_medoids = []
         for i in range(K):
-            pts_in_cluster = [coords_list[j] for j in range(len(coords_list)) if clusters[j] == i]
-            if pts_in_cluster:
-                avg_x = sum(p[0] for p in pts_in_cluster) / len(pts_in_cluster)
-                avg_y = sum(p[1] for p in pts_in_cluster) / len(pts_in_cluster)
-                new_centroids.append((avg_x, avg_y))
-            else:
-                new_centroids.append(centroids[i])
+            edges_in_cluster = [str(edge_list[j]) for j in range(len(edge_list)) if clusters[j] == i]
+            unique_in_cluster = list(set(edges_in_cluster))
+            
+            if unique_in_cluster:
+                # Find the edge that has the minimum total distance to all other edges in this zone
+                best_medoid = None
+                min_total_dist = float('inf')
                 
-        if centroids == new_centroids: 
+                for candidate in unique_in_cluster:
+                    total_dist = sum(dist_matrix[candidate][other] for other in unique_in_cluster)
+                    if total_dist < min_total_dist:
+                        min_total_dist = total_dist
+                        best_medoid = candidate
+                        
+                new_medoids.append(best_medoid)
+            else:
+                new_medoids.append(medoids[i])
+                
+        if medoids == new_medoids: 
             break
-        centroids = new_centroids
+        medoids = new_medoids
         
     return clusters
 
-# Assing clusters for origins and destinations
-orig_coords = list(zip(df['origin_x'], df['origin_y']))
-df['orig_cluster'] = simple_spatial_kmeans(orig_coords, K=NUM_OF_ZONES)
-
-dest_coords = list(zip(df['dest_x'], df['dest_y']))
-df['dest_cluster'] = simple_spatial_kmeans(dest_coords, K=NUM_OF_ZONES)
+# Assign clusters for origins and destinations using the road network distances
+df['orig_cluster'] = simple_network_kmedoids(df['origin_real_id'].tolist(), K=NUM_OF_ZONES)
+df['dest_cluster'] = simple_network_kmedoids(df['dest_real_id'].tolist(), K=NUM_OF_ZONES)
 
 print("Spatial clustering completed. Sample of assigned zones:")
 print(df[['orig_cluster', 'dest_cluster']].head(10))
+
+print("Normalizing time and starting K-Prototypes...")
 
 # Time normalization (0 to 1) (min-max scaling)
 min_t, max_t = df['start_time'].min(), df['start_time'].max()
@@ -103,7 +119,7 @@ for iteration in range(max_iters):
         clusters.append(closest_cluster)
     df['final_cluster'] = clusters
     
-    # Update prototypes - for time we take the average, for zones we take the most common value among assigned vehicles
+    # Update prototypes - for time we take the average, for zones we take the most common value
     new_prototypes = []
     for i in range(FINAL_CLUSTERS_NUM):
         cluster_cars = df[df['final_cluster'] == i]
@@ -128,6 +144,6 @@ print(df_final.head(15))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
-df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes.csv', index=False)
-print("\nSaved to agents_clustered_k_prototypes.csv")
+df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes_shortest_path.csv', index=False)
+print("\nSaved to agents_clustered_k_prototypes_shortest_path.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

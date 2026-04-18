@@ -2,7 +2,7 @@
 <configuration>
     <input>
         <net-file value="../../networks/ingolstadt_custom/ingolstadt_custom.net.xml"/>
-        <route-files value="visualization_similarity_measure.rou.xml"/>
-        <!-- <route-files value="visualization_k_prototypes.rou.xml"/> -->
+        <route-files value="visualization_similarity_measure_shortest_path.rou.xml"/>
+        <!-- <route-files value="visualization_k_prototypes_shortest_path.rou.xml"/> -->
     </input>
 </configuration>
