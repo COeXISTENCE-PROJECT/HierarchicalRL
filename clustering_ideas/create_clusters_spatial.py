@@ -1,24 +1,25 @@
+"""
+This script implements a spatial clustering methodology for traffic agents based on their origin coordinates and movement vectors.
+It employs KMeans to group agents with similar starting points and directions, followed by a geometric merge of clusters whose mean trajectories intersect.
+The resulting output identifies distinct spatial traffic flows across the network, providing a structural basis for path-based agent categorization.
+"""
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from shapely.geometry import LineString
 
-# 1. Wczytanie danych z Twoimi nowymi współrzędnymi
 df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
 
-# 2. Obliczanie wektorów (Twój Pomysł 7: Gdzie jadą?)
 df['vec_x'] = df['dest_x'] - df['origin_x']
 df['vec_y'] = df['dest_y'] - df['origin_y']
 
-# 3. Klastrowanie po Pozycji + Kierunku
 features = ['origin_x', 'origin_y', 'vec_x', 'vec_y']
 X = StandardScaler().fit_transform(df[features])
 
-K_initial = 10 # Zaczynamy od większej liczby grup
+K_initial = 10 
 df['cluster'] = KMeans(n_clusters=K_initial, random_state=42).fit_predict(X)
 
-# 4. Łączenie klastrów, których trasy się przecinają
 lines = []
 for i in range(K_initial):
     c = df[df['cluster'] == i]
