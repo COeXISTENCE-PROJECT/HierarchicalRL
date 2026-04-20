@@ -34,4 +34,4 @@ for i in range(K_initial):
 
 df['cluster'] = df['cluster'].map(final_map)
 df.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_spatial.csv', index=False)
-print("Gotowe! Klastry wektorowe zapisane.")
+print(f"\nSaved to agents_clustered_with_spatial.csv, final number of clusters: {df['cluster'].nunique()}")

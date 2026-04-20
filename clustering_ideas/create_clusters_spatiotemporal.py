@@ -55,4 +55,4 @@ for i in range(len(cluster_info)):
 
 df['cluster'] = df['cluster'].map(final_map)
 df.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_spatiotemporal.csv', index=False)
-print(f"Gotowe! Klastry (przestrzeń+kierunek+czas) zapisane. Ostateczna liczba klastrów: {df['cluster'].nunique()}")
+print(f"\nSaved to agents_clustered_with_spatiotemporal.csv, final number of clusters: {df['cluster'].nunique()}")
