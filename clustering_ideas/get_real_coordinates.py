@@ -9,7 +9,9 @@ import sumolib
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # chose .txt file with origins and destinations
-with open('networks\\ingolstadt_custom\\od_ingolstadt_custom.txt', 'r') as f:
+# with open('networks\\ingolstadt_custom\\od_ingolstadt_custom.txt', 'r') as f:
+with open('networks\\saint_arnoult\\od_saint_arnoult.txt', 'r') as f:
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     data_content = f.read()
     od_dict = ast.literal_eval(data_content)
@@ -20,9 +22,10 @@ destinations_list = od_dict['destinations']
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # Chose agents.csv file from your simulation 
-agents_df = pd.read_csv('networks\\ingolstadt_custom\\agents.csv')
+#agents_df = pd.read_csv('networks\\ingolstadt_custom\\agents.csv')
+agents_df = pd.read_csv('networks\\saint_arnoult\\agents.csv')
 # Chose .net.xml file from your simulation 
-net = sumolib.net.readNet('networks\\ingolstadt_custom\\ingolstadt_custom.net.xml')
+net = sumolib.net.readNet('networks\\saint_arnoult\\saint_arnoult.net.xml')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 edge_coords = {}
@@ -64,8 +67,9 @@ agents_df['dest_y'] = agents_df['destination'].apply(lambda idx: get_coord_for_a
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
-agents_df.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv', index=False)
-print("Saved to ingolstadt_custom_agents_coords.csv")
+#agents_df.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv', index=False)
+agents_df.to_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv', index=False)
+print("Saved to saint_arnoult_agents_coords.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 print(agents_df.head())

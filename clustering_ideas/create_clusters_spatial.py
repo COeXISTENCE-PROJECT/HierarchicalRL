@@ -9,7 +9,8 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from shapely.geometry import LineString
 
-df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
+# df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
 
 df['vec_x'] = df['dest_x'] - df['origin_x']
 df['vec_y'] = df['dest_y'] - df['origin_y']
@@ -33,5 +34,6 @@ for i in range(K_initial):
             final_map[j] = final_map[i]
 
 df['cluster'] = df['cluster'].map(final_map)
-df.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_spatial.csv', index=False)
+#df.to_csv('clustering_ideas\\inglostadt_custom_clustering\\agents_clustered_with_spatial.csv', index=False)
+df.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_with_spatial.csv', index=False)
 print(f"\nSaved to agents_clustered_with_spatial.csv, final number of clusters: {df['cluster'].nunique()}")

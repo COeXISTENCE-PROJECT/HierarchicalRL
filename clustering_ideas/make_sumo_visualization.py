@@ -9,7 +9,9 @@ import pandas as pd
 # ADJUST THIS PATH IF NEEDED
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes_shortest_path.csv')
 #df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_similarity_measure_shortest_path.csv')
-df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_spatial.csv')
+# df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_spatial.csv')
+# df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_with_spatiotemporal.csv')
+df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_similarity_measure_shortest_path.csv')
 #df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_spatiotemporal.csv')
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_similarity_measure.csv')
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_k_prototypes.csv')
@@ -45,7 +47,10 @@ cluster_colors = {
 # ADJUST THIS PATH IF NEEDED
 #with open('clustering_ideas\\ingolstadt_custom_clustering\\visualization_similarity_measure_shortest_path.rou.xml', 'w') as f:
 #with open('clustering_ideas\\ingolstadt_custom_clustering\\visualization_with_spatiotemporal.rou.xml', 'w') as f:
-with open('clustering_ideas\\ingolstadt_custom_clustering\\visualization_with_spatial.rou.xml', 'w') as f:
+# with open('clustering_ideas\\ingolstadt_custom_clustering\\visualization_with_spatial.rou.xml', 'w') as f:
+# with open('clustering_ideas\\saint_arnoult_clustering\\visualization_with_spatiotemporal.rou.xml', 'w') as f:
+with open('clustering_ideas\\saint_arnoult_clustering\\visualization_similarity_measure_shortest_path.rou.xml', 'w') as f:
+
 # with open('clustering_ideas\\ingolstadt_custom_clustering\\clustered_with_time_k_prototypes.rou.xml', 'w') as f:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     f.write('<routes>\n')
@@ -67,6 +72,6 @@ with open('clustering_ideas\\ingolstadt_custom_clustering\\visualization_with_sp
     f.write('</routes>\n')
 
 # print("Generated file visualization_k_prototypes.rou.xml")
-#print("Generated file visualization_similarity_measure_shortest_path.rou.xml")
-print("Generated file visualization_with_spatial.rou.xml")
+print("Generated file visualization_similarity_measure_shortest_path.rou.xml")
+# print("Generated file visualization_with_spatial.rou.xml")
 #print("Generated file visualization_with_spatiotemporal.rou.xml")

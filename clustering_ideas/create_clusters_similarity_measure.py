@@ -15,7 +15,8 @@ max_iters = 100
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # Load the input data with already calculated X and Y coordinates
-df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
+# df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Normalization (min-max scaling 0 to 1) of time and coordinates
@@ -75,6 +76,7 @@ print(df_final[['start_time', 'origin', 'destination', 'cluster']].head(10))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
-df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_similarity_measure.csv', index=False)
+df_final.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_with_similarity_measure.csv', index=False)
+# df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_similarity_measure.csv', index=False)
 print("\nSaved to agents_clustered_with_similarity_measure.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

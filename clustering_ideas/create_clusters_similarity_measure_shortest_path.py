@@ -17,9 +17,12 @@ max_iters = 100
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # Load the input data with already calculated X and Y coordinates
-df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
+# df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
 # Load the precomputed distance matrix (shortest path distances between edges)
-with open('clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json', 'r') as f:
+# with open('clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json', 'r') as f:
+#     dist_matrix = json.load(f)
+with open('clustering_ideas\\saint_arnoult_clustering\\shortest_path_metric_matrix.json', 'r') as f:
     dist_matrix = json.load(f)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -94,6 +97,7 @@ print(df_final[['start_time', 'origin', 'destination', 'cluster']].head(10))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
-df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_similarity_measure_shortest_path.csv', index=False)
+df_final.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_similarity_measure_shortest_path.csv', index=False)
+# df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_similarity_measure_shortest_path.csv', index=False)
 print("Gotowe! Zapisano wyniki do agents_clustered_similarity_measure_shortest_path.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
