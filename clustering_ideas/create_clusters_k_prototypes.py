@@ -17,7 +17,7 @@ max_iters = 50
 # ADJUST THIS PATH IF NEEDED
 # Load the input data with already calculated X and Y coordinates
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
-df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\provins_clustering\\provins_agents_coords.csv')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -131,7 +131,7 @@ print(df_final.head(15))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes.csv', index=False)
-df_final.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_k_prototypes.csv', index=False)
+df_final.to_csv('clustering_ideas\\provins_clustering\\agents_clustered_k_prototypes.csv', index=False)
 
 print("\nSaved to agents_clustered_k_prototypes.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

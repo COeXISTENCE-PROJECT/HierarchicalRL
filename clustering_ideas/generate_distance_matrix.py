@@ -5,8 +5,8 @@ import itertools
 
 print("Start")
 # net = sumolib.net.readNet('networks\\ingolstadt_custom\\ingolstadt_custom.net.xml')
-net = sumolib.net.readNet('networks\\saint_arnoult\\saint_arnoult.net.xml')
-df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
+net = sumolib.net.readNet('networks\\provins\\provins.net.xml')
+df = pd.read_csv('clustering_ideas\\provins_clustering\\provins_agents_coords.csv')
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
 
 unique_origins = set(df['origin_real_id'].dropna())
@@ -48,7 +48,7 @@ for e1 in distance_matrix:
 
 # with open('clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json', 'w') as f:
 #     json.dump(distance_matrix, f)
-with open('clustering_ideas\\saint_arnoult_clustering\\shortest_path_metric_matrix.json', 'w') as f:
+with open('clustering_ideas\\provins_clustering\\shortest_path_metric_matrix.json', 'w') as f:
     json.dump(distance_matrix, f)
 
 print("Saved as shortest_path_metric_matrix.json")

@@ -10,20 +10,20 @@ import json
 
 NUM_OF_ZONES = 5
 FINAL_CLUSTERS_NUM = 20 # Target number of final clusters
-TIME_WEIGHT = 0.3 # How heavily the algorithm penalizes for differences in departure time
-SPACE_WEIGHT = 0.7 # How heavily the algorithm penalizes for departing from/arriving at a different zone
+TIME_WEIGHT = 0.1 # How heavily the algorithm penalizes for differences in departure time
+SPACE_WEIGHT = 0.9 # How heavily the algorithm penalizes for departing from/arriving at a different zone
 max_iters = 100
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # Load the input data with already calculated X and Y coordinates
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
-df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\provins_clustering\\provins_agents_coords.csv')
 
 # Load the previously generated road network distance matrix
 # with open('clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json', 'r') as f:
 #     dist_matrix = json.load(f)
-with open('clustering_ideas\\saint_arnoult_clustering\\shortest_path_metric_matrix.json', 'r') as f:
+with open('clustering_ideas\\provins_clustering\\shortest_path_metric_matrix.json', 'r') as f:
     dist_matrix = json.load(f)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -149,7 +149,7 @@ print(df_final.head(15))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes_shortest_path.csv', index=False)
-df_final.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_k_prototypes_shortest_path.csv', index=False)
+df_final.to_csv('clustering_ideas\\provins_clustering\\agents_clustered_k_prototypes_shortest_path.csv', index=False)
 
 print("\nSaved to agents_clustered_k_prototypes_shortest_path.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
