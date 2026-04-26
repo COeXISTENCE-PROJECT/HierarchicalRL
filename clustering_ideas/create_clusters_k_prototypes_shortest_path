@@ -8,10 +8,10 @@ import pandas as pd
 import random
 import json
 
-NUM_OF_ZONES = 8
+NUM_OF_ZONES = 5
 FINAL_CLUSTERS_NUM = 20 # Target number of final clusters
-TIME_WEIGHT = 5.0 # How heavily the algorithm penalizes for differences in departure time
-SPACE_WEIGHT = 95.0 # How heavily the algorithm penalizes for departing from/arriving at a different zone
+TIME_WEIGHT = 0.3 # How heavily the algorithm penalizes for differences in departure time
+SPACE_WEIGHT = 0.7 # How heavily the algorithm penalizes for departing from/arriving at a different zone
 max_iters = 100
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

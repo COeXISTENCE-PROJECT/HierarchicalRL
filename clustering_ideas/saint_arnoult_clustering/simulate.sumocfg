@@ -2,7 +2,7 @@
 <configuration>
     <input>
         <net-file value="../../networks/saint_arnoult/saint_arnoult.net.xml"/>
-        <route-files value="visualization_similarity_measure_shortest_path.rou.xml"/>
+        <route-files value="visualization_k_prototypes_shortest_path.rou.xml"/>
         <!-- <route-files value="visualization_k_prototypes_shortest_path.rou.xml"/> -->
         <!--route-files value="visualization_with_spatiotemporal.rou.xml"/>-->
         <!--route-files value="visualization_with_spatial.rou.xml"/>-->
