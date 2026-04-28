@@ -3,7 +3,9 @@
     <input>
         <net-file value="../../networks/provins/provins.net.xml"/>
         <!--<route-files value="visualization_similarity_measure_shortest_path.rou.xml"/>-->
-        <route-files value="visualization_k_prototypes_shortest_path.rou.xml"/>
+        <!-- <route-files value="visualization_k_prototypes_shortest_path.rou.xml"/> -->
+        <route-files value="visualization_by_path.rou.xml"/>
+
         <!--route-files value="visualization_with_spatial.rou.xml"/>-->
     </input>
 </configuration>
