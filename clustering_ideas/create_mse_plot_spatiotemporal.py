@@ -17,7 +17,7 @@ TIME_THRESHOLD = 60
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Wczytywanie danych
-df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 df['vec_x'] = df['dest_x'] - df['origin_x']
@@ -96,7 +96,7 @@ ax2.tick_params(axis='y', labelcolor='blue')
 plt.title(f'Spatiotemporal KMeans (Próg czasu: {TIME_THRESHOLD}s)')
 fig.tight_layout()
 
-plot_path = 'clustering_ideas\\saint_arnoult_clustering\\mse_spatiotemporal_kmeans_plot.png'
+plot_path = 'clustering_ideas\\ingolstadt_custom_clustering\\mse_spatiotemporal_kmeans_plot.png'
 plt.savefig(plot_path)
 print(f"Zapisano wykres do: {plot_path}")
 

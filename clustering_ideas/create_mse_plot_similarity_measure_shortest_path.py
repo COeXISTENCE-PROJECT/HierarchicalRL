@@ -19,10 +19,10 @@ STEP_K = 1
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
-df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
 
 # Load the precomputed distance matrix (shortest path distances between edges)
-with open('clustering_ideas\\saint_arnoult_clustering\\shortest_path_metric_matrix.json', 'r') as f:
+with open('clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json', 'r') as f:
     dist_matrix = json.load(f)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -125,7 +125,7 @@ plt.ylabel('Mean Squared Error (MSE)')
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.xticks(k_values)
 
-plot_path = 'clustering_ideas\\saint_arnoult_clustering\\mse_similarity_measure_plot_shortest_path.png'
+plot_path = 'clustering_ideas\\ingolstadt_custom_clustering\\mse_similarity_measure_plot_shortest_path.png'
 plt.savefig(plot_path)
 print(f"Zapisano wykres do: {plot_path}")
 plt.show()
