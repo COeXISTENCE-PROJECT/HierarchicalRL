@@ -197,9 +197,9 @@ class FeudalAgent(BaseLearningModel):
       selects a discrete subgoal at a slower temporal scale
     - FeudalController:
       selects the actual route action at each decision point conditioned on
-      the current subgoal
+      the current subgoal 
 
-    The class is designed to fit the same interface expected by existing URB
+      The class is designed to fit the same interface expected by existing URB
     scripts:
     - `act(observation)` chooses an action
     - `push(reward)` stores the final reward associated with the last action
@@ -371,6 +371,7 @@ class FeudalAgent(BaseLearningModel):
         - subgoal -> admissible corridor
         - subgoal -> admissible bottleneck crossing strategy
         """
+
         if self.action_mask_strategy != "uniform_bins":
             return torch.ones(
                 (1, self.action_space_size), dtype=torch.float32, device=self.device
@@ -632,7 +633,6 @@ class FeudalAgent(BaseLearningModel):
         advantages = self._normalize(rewards)
 
         losses = []
-
         if self.use_cluster_embedding:
             cluster_ids = torch.full(
                 (len(manager_batch),),
@@ -766,6 +766,27 @@ if __name__ == "__main__":
     num_machines = int(num_agents * ratio_machines)
     total_episodes = human_learning_episodes + training_eps + test_eps
 
+    # KLASTRY
+    cluster_csv_path = os.path.join(
+        repo_root, 
+        "clustering_ideas", 
+        "ingolstadt_custom_clustering", 
+        "agents_clustered_with_spatiotemporal.csv"
+    )
+    key_columns = ["start_time", "origin", "destination"]
+    agent_cluster_map = {}
+
+    if os.path.exists(cluster_csv_path):
+        cluster_lookup, num_clusters = load_cluster_lookup(cluster_csv_path, key_columns)
+        agent_cluster_map, missing_indices = build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns)
+        params["num_clusters"] = num_clusters
+        print(f"[CLUSTERS] Successfully loaded {num_clusters} clusters. Missing agents: {len(missing_indices)}")
+    else:
+        params["num_clusters"] = 1
+        print(f"[WARNING] Cluster file not found at {cluster_csv_path}. Using default cluster 0.")
+
+    
+
     exp_config_path = os.path.join(records_folder, "exp_config.json")
     dump_config = params.copy()
     dump_config.update(
@@ -848,14 +869,37 @@ if __name__ == "__main__":
     print_agent_counts(env)
 
     obs_size = env.observation_space(env.possible_agents[0]).shape[0]
+
+    # PRZYPISANIE KLASTRÓW
+
     for idx in range(len(env.machine_agents)):
-        env.machine_agents[idx].model = FeudalAgent(
+        agent_obj = env.machine_agents[idx]
+        
+        # Próbujemy dopasować ID agenta do mapy klastrów
+        # (Zazwyczaj ID to 'auto_0', 'auto_1' itp., więc wyciągamy liczbę)
+        try:
+            agent_int_id = int(str(agent_obj.id).split('_')[-1])
+        except:
+            agent_int_id = idx
+            
+        c_id = agent_cluster_map.get(agent_int_id, 0)
+        
+        agent_obj.model = FeudalAgent(
             state_size=obs_size,
-            action_space_size=env.machine_agents[idx].action_space_size,
-            config=alg_params,
+            action_space_size=agent_obj.action_space_size,
+            config=params,
             device=device,
+            cluster_id=c_id, # Tutaj wstrzykujemy klaster!
         )
-    agent_lookup = {str(agent.id): agent for agent in env.machine_agents}
+
+    #   for idx in range(len(env.machine_agents)):
+    #     env.machine_agents[idx].model = FeudalAgent(
+    #         state_size=obs_size,
+    #         action_space_size=env.machine_agents[idx].action_space_size,
+    #         config=alg_params,
+    #         device=device,
+    #     )
+        agent_lookup = {str(agent.id): agent for agent in env.machine_agents}
 
     os.makedirs(plots_folder, exist_ok=True)
     pbar.set_description("AV learning")
