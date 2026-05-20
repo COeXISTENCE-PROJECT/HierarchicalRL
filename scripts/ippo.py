@@ -228,19 +228,15 @@ if __name__ == "__main__":
         seed = env_seed,
         create_agents = False,
         create_paths = True,
-        save_detectors_info = False,
+        # save_detectors_info = False,
         agent_parameters = {
-            "new_machines_after_mutation": num_machines, 
-            "human_parameters": {
-                "model": human_model,
-                "alpha": human_alpha,
-                "beta": human_beta,
-                "beta_randomness": human_beta_randomness,
-                "deterministic": human_deterministic,
+            "new_machines_after_mutation": num_machines,
+            "human_parameters" : {
+                "model" : human_model
             },
             "machine_parameters" : {
                 "behavior" : av_behavior,
-                "observation_type" : observations
+                "observation_type" : "previous_agents_plus_start_time" #"previous_agents_plus_start_time"
             }
         },
         environment_parameters = {
@@ -251,7 +247,7 @@ if __name__ == "__main__":
             "custom_network_folder" : custom_network_folder,
             "sumo_type" : "sumo",
             "simulation_timesteps" : max_start_time
-        }, 
+        },
         plotter_parameters = {
             "phases" : phases,
             "phase_names" : phase_names,
@@ -266,9 +262,8 @@ if __name__ == "__main__":
             "number_of_paths" : number_of_paths,
             "beta" : path_gen_beta,
             "num_samples" : num_samples,
-            "path_gen_workers" : path_gen_workers,
             "visualize_paths" : False
-        } 
+        }
     )
 
     env.start()

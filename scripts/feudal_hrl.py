@@ -770,8 +770,10 @@ if __name__ == "__main__":
     cluster_csv_path = os.path.join(
         repo_root, 
         "clustering_ideas", 
-        "ingolstadt_custom_clustering", 
-        "agents_clustered_with_spatiotemporal.csv"
+        # "ingolstadt_custom_clustering",
+        "provins_clustering", 
+        # "agents_clustered_with_spatiotemporal.csv"
+        "agents_clustered_by_path.csv"
     )
     key_columns = ["start_time", "origin", "destination"]
     agent_cluster_map = {}
