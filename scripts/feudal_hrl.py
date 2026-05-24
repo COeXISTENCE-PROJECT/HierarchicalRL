@@ -743,7 +743,6 @@ if __name__ == "__main__":
         project="mk-hrl",
         name=args.id,
         config=params,
-        sync_tensorboard=True
     )
 
     custom_network_folder = f"../networks/{network}"

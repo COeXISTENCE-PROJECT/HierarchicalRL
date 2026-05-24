@@ -6,7 +6,6 @@ repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
 
-import wandb
 import argparse
 import ast
 import json
@@ -135,12 +134,6 @@ if __name__ == "__main__":
     env_seed = args.env_seed
     torch_seed = args.torch_seed
     print("### STARTING EXPERIMENT ###")
-    wandb.init(
-        project="mk-hrl",
-        name=args.id,
-        config=alg_params,
-        sync_tensorboard=True
-    )
     print(f"Algorithm: {ALGORITHM.upper()}")
     print(f"Experiment ID: {exp_id}")
     print(f"Network: {network}")
@@ -179,6 +172,14 @@ if __name__ == "__main__":
     # set params as variables in this script
     for key, value in params.items():
         globals()[key] = value
+
+
+    import wandb
+    wandb.init(
+    project="mk-hrl",
+    name=args.id,
+    config=alg_params,
+)
 
     
     custom_network_folder = f"../networks/{network}"
