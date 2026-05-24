@@ -757,9 +757,10 @@ if __name__ == "__main__":
 
     import wandb
     wandb.init(
-        project="mk-hrl",
+        entity="mk-hrl",
+        project="eksperymenty", 
         name=args.id,
-        config=params,
+        config=params 
     )
 
     custom_network_folder = f"../networks/{network}"
