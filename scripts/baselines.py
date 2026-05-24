@@ -87,9 +87,9 @@ if __name__ == "__main__":
     import wandb
     wandb.init(
         entity="mk-hrl",
-        project="eksperymenty",  
+        project="sandbox",
         name=args.id,
-        config=params 
+        config=alg_params 
     )
 
     
