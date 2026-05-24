@@ -11,6 +11,7 @@ repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
 
+import wandb
 import argparse
 import ast
 import json
@@ -50,6 +51,13 @@ if __name__ == "__main__":
     env_seed = args.env_seed
     baseline_model = args.model
     print("### STARTING EXPERIMENT ###")
+    import wandb
+    wandb.init(
+        project="mk-hrl",
+        name=exp_id,
+        config=params,
+        sync_tensorboard=True
+    )
     print(f"Experiment ID: {exp_id}")
     print(f"Network: {network}")
     print(f"Environment seed: {env_seed}")
