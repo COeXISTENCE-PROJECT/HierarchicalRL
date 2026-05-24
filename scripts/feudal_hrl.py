@@ -766,26 +766,23 @@ if __name__ == "__main__":
     num_machines = int(num_agents * ratio_machines)
     total_episodes = human_learning_episodes + training_eps + test_eps
 
-    # KLASTRY
-    cluster_csv_path = os.path.join(
-        repo_root, 
-        "clustering_ideas", 
-        # "ingolstadt_custom_clustering",
-        "provins_clustering", 
-        # "agents_clustered_with_spatiotemporal.csv"
-        "agents_clustered_by_path.csv"
-    )
-    key_columns = ["start_time", "origin", "destination"]
+# === DYNAMICZNE WZORCOWANIE KLASTRÓW Z CONFIGU ===
+    cluster_csv_path = None
+    if "cluster_csv_path" in alg_params and alg_params["cluster_csv_path"]:
+        # Łączymy z repo_root na wypadek, gdyby ścieżka w JSON była relatywna
+        cluster_csv_path = os.path.join(repo_root, alg_params["cluster_csv_path"])
+    
+    key_columns = alg_params.get("key_columns", ["start_time", "origin", "destination"])
     agent_cluster_map = {}
 
-    if os.path.exists(cluster_csv_path):
+    if cluster_csv_path and os.path.exists(cluster_csv_path):
         cluster_lookup, num_clusters = load_cluster_lookup(cluster_csv_path, key_columns)
         agent_cluster_map, missing_indices = build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns)
         params["num_clusters"] = num_clusters
-        print(f"[CLUSTERS] Successfully loaded {num_clusters} clusters. Missing agents: {len(missing_indices)}")
+        print(f"[CLUSTERS] Successfully loaded {num_clusters} clusters from: {cluster_csv_path}. Missing agents: {len(missing_indices)}")
     else:
         params["num_clusters"] = 1
-        print(f"[WARNING] Cluster file not found at {cluster_csv_path}. Using default cluster 0.")
+        print(f"[WARNING] Cluster file not found or not specified ({cluster_csv_path}). Using default cluster 0.")
 
     
 

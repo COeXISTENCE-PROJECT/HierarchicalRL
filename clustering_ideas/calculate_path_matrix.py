@@ -6,9 +6,9 @@ import pandas as pd
 # with open('clustering_ideas/ingolstadt_custom_clustering/agent_paths.json', 'r') as f:
 #     agent_paths = json.load(f)
 # df = pd.read_csv('clustering_ideas/ingolstadt_custom_clustering/ingolstadt_custom_agents_coords.csv')
-with open('clustering_ideas/provins_clustering/agent_paths.json', 'r') as f:
+with open('clustering_ideas/saint_arnoult_clustering/agent_paths.json', 'r') as f:
     agent_paths = json.load(f)
-df = pd.read_csv('clustering_ideas/provins_clustering/provins_agents_coords.csv')
+df = pd.read_csv('clustering_ideas/saint_arnoult_clustering/saint_arnoult_agents_coords.csv')
 
 TIME_WEIGHT = 0.4 
 PATH_WEIGHT = 0.6  
@@ -43,6 +43,6 @@ for i in range(n):
         dist_matrix[i, j] = combined_dist
         dist_matrix[j, i] = combined_dist
 
-np.save('clustering_ideas/provins_clustering/path_distance_matrix.npy', dist_matrix)
+np.save('clustering_ideas/saint_arnoult_clustering/path_distance_matrix.npy', dist_matrix)
 # np.save('clustering_ideas/ingolstadt_custom_clustering/path_distance_matrix.npy', dist_matrix)
 print("Saved.")
