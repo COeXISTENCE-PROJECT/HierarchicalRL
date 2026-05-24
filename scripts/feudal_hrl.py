@@ -57,6 +57,7 @@ Recommended extensions
 
 import os
 import sys
+import wandb
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -702,6 +703,12 @@ if __name__ == "__main__":
     torch_seed = args.torch_seed
 
     print("### STARTING EXPERIMENT ###")
+    wandb.init(
+            project="mk-hrl",
+            name=args.id,
+            config=alg_params,
+            sync_tensorboard=True
+        )
     print(f"Algorithm: {ALGORITHM.upper()}")
     print(f"Experiment ID: {exp_id}")
     print(f"Network: {network}")
