@@ -121,15 +121,32 @@ def build_mlp_optimizer(module: nn.Module, lr: float) -> optim.Optimizer:
     """
     return optim.Adam(module.parameters(), lr=lr)
 
+# def load_cluster_lookup(cluster_csv_path, key_columns):
+#     df = pd.read_csv(cluster_csv_path)
+#     if "cluster" not in df.columns:
+#         raise ValueError(f"No 'cluster' column in {cluster_csv_path}")
+#     lookup = {}
+#     for _, row in df.iterrows():
+#         key = tuple(row[col] for col in key_columns)
+#         lookup[key] = int(row["cluster"])
+#     num_clusters = int(df["cluster"].nunique())
+#     return lookup, num_clusters
+
+
 def load_cluster_lookup(cluster_csv_path, key_columns):
     df = pd.read_csv(cluster_csv_path)
     if "cluster" not in df.columns:
         raise ValueError(f"No 'cluster' column in {cluster_csv_path}")
+
+    unique_clusters = sorted(df["cluster"].unique())
+    cluster_to_idx = {c: i + 1 for i, c in enumerate(unique_clusters)}
+
     lookup = {}
     for _, row in df.iterrows():
         key = tuple(row[col] for col in key_columns)
-        lookup[key] = int(row["cluster"])
-    num_clusters = int(df["cluster"].nunique())
+        lookup[key] = cluster_to_idx[row["cluster"]]
+
+    num_clusters = len(unique_clusters) + 1
     return lookup, num_clusters
 
 def build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns):
@@ -970,3 +987,4 @@ if __name__ == "__main__":
         remove_additional_files=True,
     )
     run_metrics_analysis(exp_id, results_folder="../results")
+    wandb.finish()
