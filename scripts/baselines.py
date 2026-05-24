@@ -51,13 +51,6 @@ if __name__ == "__main__":
     env_seed = args.env_seed
     baseline_model = args.model
     print("### STARTING EXPERIMENT ###")
-    import wandb
-    wandb.init(
-        project="mk-hrl",
-        name=exp_id,
-        config=params,
-        sync_tensorboard=True
-    )
     print(f"Experiment ID: {exp_id}")
     print(f"Network: {network}")
     print(f"Environment seed: {env_seed}")
@@ -90,6 +83,14 @@ if __name__ == "__main__":
     # set params as variables in this script
     for key, value in params.items():
         globals()[key] = value
+
+    import wandb
+    wandb.init(
+        project="mk-hrl",
+        name=args.id,
+        config=params,
+        sync_tensorboard=True
+    )
 
     
     custom_network_folder = f"../networks/{network}"
