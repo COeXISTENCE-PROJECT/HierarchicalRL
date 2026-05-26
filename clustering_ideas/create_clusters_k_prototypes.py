@@ -8,16 +8,16 @@ import random
 import math
 
 NUM_OF_ZONES = 5
-FINAL_CLUSTERS_NUM = 20 # Target number of final clusters
-TIME_WEIGHT = 1.0 # How heavily the algorithm penalizes for differences in departure time
-SPACE_WEIGHT = 8.0 # How heavily the algorithm penalizes for departing from/arriving at a different zone
+FINAL_CLUSTERS_NUM = 9 # Target number of final clusters
+TIME_WEIGHT = 0.8 # How heavily the algorithm penalizes for differences in departure time
+SPACE_WEIGHT = 0.2 # How heavily the algorithm penalizes for departing from/arriving at a different zone
 max_iters = 50
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # Load the input data with already calculated X and Y coordinates
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
-df = pd.read_csv('clustering_ideas\\provins_clustering\\provins_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -131,7 +131,7 @@ print(df_final.head(15))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes.csv', index=False)
-df_final.to_csv('clustering_ideas\\provins_clustering\\agents_clustered_k_prototypes.csv', index=False)
+df_final.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_k_prototypes.csv', index=False)
 
 print("\nSaved to agents_clustered_k_prototypes.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

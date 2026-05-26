@@ -11,7 +11,7 @@ from shapely.geometry import LineString
 
 # df = pd.read_csv('clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv')
 # df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
-df = pd.read_csv('clustering_ideas\\provins_clustering\\provins_agents_coords.csv')
+df = pd.read_csv('clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv')
 
 df['vec_x'] = df['dest_x'] - df['origin_x']
 df['vec_y'] = df['dest_y'] - df['origin_y']
@@ -19,7 +19,7 @@ df['vec_y'] = df['dest_y'] - df['origin_y']
 features = ['origin_x', 'origin_y', 'vec_x', 'vec_y', 'start_time']
 X = StandardScaler().fit_transform(df[features])
 
-K_initial = 20 
+K_initial = 10
 df['cluster'] = KMeans(n_clusters=K_initial, random_state=42).fit_predict(X)
 
 cluster_info = []
@@ -58,5 +58,5 @@ for i in range(len(cluster_info)):
 df['cluster'] = df['cluster'].map(final_map)
 # df.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_spatiotemporal.csv', index=False)
 # df.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_with_spatiotemporal.csv', index=False)
-df.to_csv('clustering_ideas\\provins_clustering\\agents_clustered_with_spatiotemporal.csv', index=False)
+df.to_csv('clustering_ideas\\saint_arnoult_clustering\\agents_clustered_with_spatiotemporal.csv', index=False)
 print(f"\nSaved to agents_clustered_with_spatiotemporal.csv, final number of clusters: {df['cluster'].nunique()}")
