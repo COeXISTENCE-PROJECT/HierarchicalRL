@@ -53,6 +53,31 @@ from utils import (  # type: ignore
     script_path_for_config,
 )
 
+def load_cluster_lookup(cluster_csv_path, key_columns):
+    df = pd.read_csv(cluster_csv_path)
+    if "cluster" not in df.columns:
+        raise ValueError(f"No 'cluster' column in {cluster_csv_path}")
+    unique_clusters = sorted(df["cluster"].unique())
+    cluster_to_idx = {c: i + 1 for i, c in enumerate(unique_clusters)}
+    lookup = {}
+    for _, row in df.iterrows():
+        key = tuple(row[col] for col in key_columns)
+        lookup[key] = cluster_to_idx[row["cluster"]]
+    num_clusters = len(unique_clusters) + 1
+    return lookup, num_clusters
+
+def build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns):
+    agents_df = pd.read_csv(agents_csv_path)
+    cluster_map = {}
+    missing = []
+    for idx, row in agents_df.iterrows():
+        key = tuple(row[col] for col in key_columns)
+        if key in cluster_lookup:
+            cluster_map[idx] = int(cluster_lookup[key])
+        else:
+            cluster_map[idx] = 0
+            missing.append(idx)
+    return cluster_map, missing
 
 def build_mlp_optimizer(module: nn.Module, lr: float) -> optim.Optimizer:
     return optim.Adam(module.parameters(), lr=lr)
@@ -77,9 +102,13 @@ class FeudalAgent(BaseLearningModel):
         action_space_size: int,
         config: Dict,
         device: torch.device,
+        cluster_id: int = 0,
     ):
         super().__init__()
         self.device = device
+        self.cluster_id = int(cluster_id)
+        self.use_cluster_embedding = bool(config.get("use_cluster_embedding", False))
+        self.num_clusters = int(config.get("num_clusters", 0))
         self.action_space_size = int(action_space_size)
         self.manager_period = int(config["manager_period"])
         self.num_subgoals = int(config["num_subgoals"])
@@ -107,8 +136,8 @@ class FeudalAgent(BaseLearningModel):
             obs_dim=state_size,
             num_subgoals=self.num_subgoals,
             hidden_dims=config["manager_hidden_dims"],
-            use_cluster_embedding=bool(config.get("use_cluster_embedding", False)),
-            num_clusters=int(config.get("num_clusters", 0)),
+            use_cluster_embedding=self.use_cluster_embedding,
+            num_clusters=self.num_clusters,
             cluster_embed_dim=int(config.get("cluster_embed_dim", 8)),
         ).to(self.device)
         self.controller = FeudalController(
@@ -130,14 +159,20 @@ class FeudalAgent(BaseLearningModel):
             return torch.ones((1, self.action_space_size), dtype=torch.float32, device=self.device)
 
         bins = np.array_split(np.arange(self.action_space_size), self.num_subgoals)
-        chosen = bins[subgoal]
+        rotated = (subgoal + self.cluster_id) % self.num_subgoals
+        chosen = bins[rotated]
+        # chosen = bins[subgoal]
         mask = torch.zeros((1, self.action_space_size), dtype=torch.float32, device=self.device)
         mask[:, chosen] = 1.0
         return mask
 
     def _select_subgoal(self, state: np.ndarray) -> tuple[int, float]:
         state_tensor = self._to_tensor(state)
-        output = self.manager.act(state_tensor, deterministic=self.deterministic)
+        if getattr(self, "use_cluster_embedding", False):
+            cluster_tensor = torch.tensor([self.cluster_id], dtype=torch.long, device=self.device)
+            output = self.manager.act(state_tensor, cluster_ids=cluster_tensor, deterministic=self.deterministic)
+        else:
+            output = self.manager.act(state_tensor, deterministic=self.deterministic)
         return output.subgoal, output.log_prob
 
     def act(self, state):
@@ -244,8 +279,15 @@ class FeudalAgent(BaseLearningModel):
         advantages = self._normalize(rewards)
 
         losses = []
+
+        if getattr(self, "use_cluster_embedding", False):
+            cluster_ids = torch.full((len(manager_batch),), self.cluster_id, dtype=torch.long, device=self.device)
+
         for _ in range(self.manager_epochs):
-            dist = self.manager.dist(states)
+            if getattr(self, "use_cluster_embedding", False):
+                dist = self.manager.dist(states, cluster_ids=cluster_ids)
+            else:
+                dist = self.manager.dist(states)            
             new_log_probs = dist.log_prob(subgoals)
             ratio = torch.exp(new_log_probs - old_log_probs)
             surr1 = ratio * advantages
@@ -356,6 +398,20 @@ if __name__ == "__main__":
     num_machines = int(num_agents * ratio_machines)
     total_episodes = human_learning_episodes + training_eps + test_eps
 
+    cluster_csv_path = None
+    if alg_params.get("use_cluster_embedding", False) and alg_params.get("cluster_csv_path"):
+        cluster_csv_path = os.path.join(repo_root, alg_params["cluster_csv_path"])
+    
+    key_columns = alg_params.get("cluster_key_columns", ["start_time", "origin", "destination"])
+    agent_cluster_map = {}
+
+    if cluster_csv_path and os.path.exists(cluster_csv_path):
+        cluster_lookup, num_clusters = load_cluster_lookup(cluster_csv_path, key_columns)
+        agent_cluster_map, missing_indices = build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns)
+        params["num_clusters"] = num_clusters
+    else:
+        params["num_clusters"] = 1
+
     exp_config_path = os.path.join(records_folder, "exp_config.json")
     dump_config = params.copy()
     dump_config.update(
@@ -445,14 +501,31 @@ if __name__ == "__main__":
     print_agent_counts(env)
 
     obs_size = env.observation_space(env.possible_agents[0]).shape[0]
+    # for idx in range(len(env.machine_agents)):
+    #     env.machine_agents[idx].model = FeudalAgent(
+    #         state_size=obs_size,
+    #         action_space_size=env.machine_agents[idx].action_space_size,
+    #         config=alg_params,
+    #         device=device,
+    #     )
+    # agent_lookup = {str(agent.id): agent for agent in env.machine_agents}
+
     for idx in range(len(env.machine_agents)):
-        env.machine_agents[idx].model = FeudalAgent(
+        agent_obj = env.machine_agents[idx]
+        try:
+            agent_int_id = int(str(agent_obj.id).split('_')[-1])
+        except:
+            agent_int_id = idx
+            
+        c_id = agent_cluster_map.get(agent_int_id, 0)
+        
+        agent_obj.model = FeudalAgent(
             state_size=obs_size,
-            action_space_size=env.machine_agents[idx].action_space_size,
-            config=alg_params,
+            action_space_size=agent_obj.action_space_size,
+            config=params,
             device=device,
+            cluster_id=c_id, 
         )
-    agent_lookup = {str(agent.id): agent for agent in env.machine_agents}
 
     os.makedirs(plots_folder, exist_ok=True)
     pbar.set_description("AV learning")
