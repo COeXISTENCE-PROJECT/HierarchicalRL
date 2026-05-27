@@ -12,7 +12,7 @@
 
 | Miasto | `num_clusters` (K) | `TIME_WEIGHT` | `SPACE_WEIGHT` |
 | --- | --- | --- | --- |
-| **Provins** | 13 | 0.4 | 0.6 |
+| **Provins** | 15 | 0.4 | 0.6 |
 | **Saint Arnoult** | 19 | 0.4 | 0.6 |
 | **Ingolstadt** | 19 | 0.8 | 0.2 |
 
@@ -36,11 +36,11 @@
 
 ### Spatial (Przestrzenne)
 
-| Miasto | Początkowe `K_initial` |
-| --- | --- |
-| **Provins** | 12 |
-| **Saint Arnoult** | 12 |
-| **Ingolstadt** | 8 |
+| Miasto | Początkowe `K_initial` | Ostateczna liczba klastrów (po fuzji) |
+| --- | --- | --- |
+| **Provins** | 12 | 6 |
+| **Saint Arnoult** | 12 | 6 |
+| **Ingolstadt** | 8/12 | 1/5 |
 
 ### Spatiotemporal (Czasoprzestrzenne)
 

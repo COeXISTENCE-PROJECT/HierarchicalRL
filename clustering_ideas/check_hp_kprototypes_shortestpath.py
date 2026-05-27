@@ -1,7 +1,7 @@
 """
 FULL GRID SEARCH K-PROTOTYPES PIPELINE
 Tests ALL combinations of K and Weights
-Finds the global optimal weights per K using Utopia distance, 
+Finds the global optimal weights per K using distance to (0,0) in normalized error space, 
 and then finds the optimal K using the Elbow method on those best distances
 """
 print("START")
@@ -18,10 +18,10 @@ STEP_K = 2
 MAX_ITERS = 50
 print("Configuration set")
 
-CSV_PATH = 'clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv'
-JSON_PATH = 'clustering_ideas\\saint_arnoult_clustering\\shortest_path_metric_matrix.json'
-PLOT_K_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_elbow_kprototypes_sp_plot.png'
-PLOT_W_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_weights_kprototypes_sp_plot.png'
+CSV_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv'
+JSON_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json'
+PLOT_K_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_elbow_kprototypes_sp_plot.png'
+PLOT_W_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_weights_kprototypes_sp_plot.png'
 print("Paths set")
 
 def find_optimal_k(k_values, error_values):
@@ -45,7 +45,7 @@ df = pd.read_csv(CSV_PATH)
 with open(JSON_PATH, 'r') as f:
     dist_matrix = json.load(f)
 
-print(f"Creating initial clusters using K-Medoids with Shortest Path similarity")
+print(f"Creating initial clusters using K-Medoids with Shortest Path distances (K={NUM_OF_ZONES})")
 def simple_network_kmedoids(edge_list, K=NUM_OF_ZONES, iters=30):
     unique_edges = list(set(edge_list))
     unique_edges = [str(e) for e in unique_edges if pd.notna(e)]
@@ -112,7 +112,7 @@ all_results = []
 
 for current_k in k_list:
     for tw, sw in zip(time_weights_test, space_weights_test):
-        print(f"[{current_run:03d}/{total_runs}] Trenowanie K-Prototypes: K={current_k:02d} | TW={tw:.1f} | SW={sw:.1f}")
+        print(f"[{current_run:03d}/{total_runs}] Training K-Prototypes: K={current_k:02d} | TW={tw:.1f} | SW={sw:.1f}")
         
         prototypes = df[features].sample(n=current_k, random_state=42).values.tolist()
         
@@ -175,35 +175,35 @@ t_range = t_max - t_min or 1.0
 df_results['s_norm'] = (df_results['s_mse'] - s_min) / s_range
 df_results['t_norm'] = (df_results['t_mse'] - t_min) / t_range
 
-#Obliczanie odległości od (0,0) dla każdej kombinacji
-df_results['utopia_dist'] = np.sqrt(df_results['s_norm']**2 + df_results['t_norm']**2)
+# Calculating distance from (0,0) for each combination
+df_results['dist_to_origin'] = np.sqrt(df_results['s_norm']**2 + df_results['t_norm']**2)
 
-# Dla każdego K wybieramy wagi które dały najmniejszą odległość
-best_per_k_idx = df_results.groupby('k')['utopia_dist'].idxmin()
+# Extracting optimal weights for the chosen K - ones that minimize the distance to (0,0)
+best_per_k_idx = df_results.groupby('k')['dist_to_origin'].idxmin()
 best_per_k = df_results.loc[best_per_k_idx].sort_values('k').reset_index(drop=True)
 
-#Szukamy elbow point na liście najlepszych wyników dla poszczególnych K
-best_k = find_optimal_k(best_per_k['k'].tolist(), best_per_k['utopia_dist'].tolist())
-print(f">>> Optymalne K wybrane matematycznie (Elbow): {best_k} <<<")
+# Looking for the elbow point on the list of best results for individual K
+best_k = find_optimal_k(best_per_k['k'].tolist(), best_per_k['dist_to_origin'].tolist())
+print(f">>> Optimal K (Elbow): {best_k} <<<")
 
-#Wyciągamy optymalne wagi dla wybranego K
+# Extracting optimal weights for the chosen K
 optimal_row = best_per_k[best_per_k['k'] == best_k].iloc[0]
 opt_tw = optimal_row['tw']
 opt_sw = optimal_row['sw']
-print(f">>> Optymalne Wagi dla K={best_k}: Czas={opt_tw:.1f}, Przestrzeń={opt_sw:.1f} <<<")
+print(f">>> Optimal Weights for K={best_k}: Time={opt_tw:.1f}, Space={opt_sw:.1f} <<<")
 
 plt.figure(figsize=(10, 6))
-plt.plot(best_per_k['k'], best_per_k['utopia_dist'], marker='o', linestyle='-', color='red', linewidth=2)
-plt.plot(best_k, optimal_row['utopia_dist'], marker='o', markersize=12, color='blue', label=f'Wybrane K={best_k}')
-plt.title('Znormalizowany Błąd (Utopia Distance) vs Liczba Klastrów (K)')
-plt.xlabel('Liczba Klastrów (K)')
-plt.ylabel('Kompozytowy Błąd Znormalizowany')
+plt.plot(best_per_k['k'], best_per_k['dist_to_origin'], marker='o', linestyle='-', color='red', linewidth=2)
+plt.plot(best_k, optimal_row['dist_to_origin'], marker='o', markersize=12, color='blue', label=f'Selected K={best_k}')
+plt.title('Normalized Error (Distance to (0,0)) vs Number of Clusters (K)')
+plt.xlabel('Number of Clusters (K)')
+plt.ylabel('Normalized Error')
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.xticks(k_list)
 plt.legend()
 plt.savefig(PLOT_K_PATH)
 
-#Trade-off (Tylko dla wybranego najlepszego K)
+# Trade-off (Only for the chosen K)
 best_k_results = df_results[df_results['k'] == best_k].sort_values('tw')
 
 fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -211,8 +211,8 @@ x_positions = np.arange(len(time_weights_test))
 x_labels = [f"{row.tw:.1f}:{row.sw:.1f}" for _, row in best_k_results.iterrows()]
 
 color1 = 'tab:blue'
-ax1.set_xlabel('Balans ( Czas : Przestrzeń )', fontweight='bold')
-ax1.set_ylabel('Błąd Przestrzenny (MSE Kar)', color=color1, fontweight='bold')
+ax1.set_xlabel('Balance (Time : Space)', fontweight='bold')
+ax1.set_ylabel('Spatial Error (MSE)', color=color1, fontweight='bold')
 ax1.plot(x_positions, best_k_results['s_mse'], marker='o', color=color1, linewidth=2.5)
 ax1.tick_params(axis='y', labelcolor=color1)
 ax1.set_xticks(x_positions)
@@ -220,18 +220,18 @@ ax1.set_xticklabels(x_labels, rotation=45)
 
 ax2 = ax1.twinx()
 color2 = 'tab:orange'
-ax2.set_ylabel('Błąd Czasowy (MSE Czasu)', color=color2, fontweight='bold')
+ax2.set_ylabel('Temporal Error (MSE)', color=color2, fontweight='bold')
 ax2.plot(x_positions, best_k_results['t_mse'], marker='s', color=color2, linewidth=2.5, linestyle='--')
 ax2.tick_params(axis='y', labelcolor=color2)
 
 opt_w_index = list(time_weights_test).index(opt_tw)
-plt.axvline(x=opt_w_index, color='green', linestyle=':', linewidth=3, label=f'Punkt Utopii ({opt_tw:.1f}:{opt_sw:.1f})')
-plt.title(f'Kompromis Wag dla K-Prototypes (K={best_k})')
+plt.axvline(x=opt_w_index, color='green', linestyle=':', linewidth=3, label=f'Best point ({opt_tw:.1f}:{opt_sw:.1f})')
+plt.title(f'Best weights for K-Prototypes (K={best_k})')
 fig.tight_layout()
 plt.legend()
 plt.savefig(PLOT_W_PATH)
 
-print("\nNajlepsze parametry dla K-Prototypes shortest path:")
+print("\n Best parameters for K-Prototypes (shortest path):")
 print(f"num_clusters (K): {int(best_k)}")
 print(f"TIME_WEIGHT: {opt_tw:.1f}")
 print(f"SPACE_WEIGHT: {opt_sw:.1f}")
