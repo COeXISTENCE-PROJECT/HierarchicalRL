@@ -42,8 +42,8 @@ if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
 
 from baseline_models import BaseLearningModel
-from models.controller import FeudalController
-from models.manager import FeudalManager
+from scripts.controller import FeudalController
+from scripts.manager import FeudalManager
 from routerl import TrafficEnvironment
 from utils import (  # type: ignore
     clear_SUMO_files,
@@ -131,6 +131,8 @@ class FeudalAgent(BaseLearningModel):
         self.previous_subgoal: Optional[int] = None
         self.memory: List[Transition] = []
         self.loss: List[Dict[str, float]] = []
+        
+        self.last_transition_stub = None
 
         self.manager = FeudalManager(
             obs_dim=state_size,
@@ -161,9 +163,8 @@ class FeudalAgent(BaseLearningModel):
         bins = np.array_split(np.arange(self.action_space_size), self.num_subgoals)
         rotated = (subgoal + self.cluster_id) % self.num_subgoals
         chosen = bins[rotated]
-        # chosen = bins[subgoal]
         mask = torch.zeros((1, self.action_space_size), dtype=torch.float32, device=self.device)
-        mask[:, chosen] = 1.0
+        mask[0, chosen] = 1.0
         return mask
 
     def _select_subgoal(self, state: np.ndarray) -> tuple[int, float]:
@@ -205,9 +206,12 @@ class FeudalAgent(BaseLearningModel):
             "manager_step": manager_step,
         }
         self.decision_count += 1
-        return controller_output.action
+        return int(controller_output.action)
 
     def push(self, reward):
+        if self.last_transition_stub is None:
+            return
+            
         reward = float(reward)
         intrinsic_reward = self._intrinsic_reward()
         record = Transition(
@@ -221,12 +225,13 @@ class FeudalAgent(BaseLearningModel):
             manager_step=bool(self.last_transition_stub["manager_step"]),
         )
         self.memory.append(record)
-        del self.last_transition_stub
+        self.last_transition_stub = None
 
     def _intrinsic_reward(self) -> float:
         reward = 0.0
         if self.previous_subgoal is not None and self.current_subgoal != self.previous_subgoal:
             reward -= self.goal_switch_penalty
+            self.previous_subgoal = self.current_subgoal
         reward += 1.0 / max(self.num_subgoals, 1)
         return reward
 
@@ -304,7 +309,7 @@ class FeudalAgent(BaseLearningModel):
     def learn(self):
         if len(self.memory) < self.batch_size:
             return
-        batch = random.sample(self.memory, self.batch_size)
+        batch = self.memory[:]
         manager_loss = self._manager_update(batch)
         controller_loss = self._controller_update(batch)
         self.loss.append({
@@ -501,14 +506,6 @@ if __name__ == "__main__":
     print_agent_counts(env)
 
     obs_size = env.observation_space(env.possible_agents[0]).shape[0]
-    # for idx in range(len(env.machine_agents)):
-    #     env.machine_agents[idx].model = FeudalAgent(
-    #         state_size=obs_size,
-    #         action_space_size=env.machine_agents[idx].action_space_size,
-    #         config=alg_params,
-    #         device=device,
-    #     )
-    # agent_lookup = {str(agent.id): agent for agent in env.machine_agents}
 
     for idx in range(len(env.machine_agents)):
         agent_obj = env.machine_agents[idx]
@@ -526,6 +523,9 @@ if __name__ == "__main__":
             device=device,
             cluster_id=c_id, 
         )
+        
+    # Słownik MUSI być zainicjowany po stworzeniu modeli, inaczej pętla wyżej wybuchnie!
+    agent_lookup = {str(agent.id): agent for agent in env.machine_agents}
 
     os.makedirs(plots_folder, exist_ok=True)
     pbar.set_description("AV learning")
@@ -539,6 +539,11 @@ if __name__ == "__main__":
 
         for agent_id in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
+            
+            # 1. Zawsze najpierw ładujemy poprzedni krok do pamięci
+            agent_lookup[agent_id].model.push(reward)
+            
+            # 2. Sprawdzamy czy to koniec epizodu dla tego agenta
             if termination or truncation:
                 reward = float(reward)
                 episode_rewards.append(reward)
@@ -547,7 +552,6 @@ if __name__ == "__main__":
                 else:
                     episode_travel_times.append(-reward)
 
-                agent_lookup[agent_id].model.push(reward)
                 if episode % update_every == 0:
                     losses_before = len(agent_lookup[agent_id].model.loss)
                     agent_lookup[agent_id].model.learn()
@@ -558,7 +562,9 @@ if __name__ == "__main__":
                         episode_losses.append(loss_value["combined_loss"])
                 action = None
             else:
+                # 3. Jeśli to nie koniec, odpalamy nową akcję
                 action = agent_lookup[agent_id].model.act(observation)
+                
             env.step(action)
 
         log_data = {
@@ -595,6 +601,7 @@ if __name__ == "__main__":
 
         for agent_id in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
+            
             if termination or truncation:
                 reward = float(reward)
                 episode_rewards.append(reward)
