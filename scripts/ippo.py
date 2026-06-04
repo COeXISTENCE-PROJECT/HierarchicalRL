@@ -234,45 +234,50 @@ if __name__ == "__main__":
     
     # Initialize the environment
     env = TrafficEnvironment(
-        seed = env_seed,
-        create_agents = False,
-        create_paths = True,
-        # save_detectors_info = False,
-        agent_parameters = {
+        seed=env_seed,
+        create_agents=False,
+        create_paths=True,
+        save_detectors_info=False,
+        agent_parameters={
             "new_machines_after_mutation": num_machines,
-            "human_parameters" : {
-                "model" : human_model
+            "human_parameters": {
+                "model": human_model,
+                "alpha": human_alpha,
+                "beta": human_beta,
+                "beta_randomness": human_beta_randomness,
+                "deterministic": human_deterministic,
             },
-            "machine_parameters" : {
-                "behavior" : av_behavior,
-                "observation_type" : "previous_agents_plus_start_time" #"previous_agents_plus_start_time"
-            }
+            "machine_parameters": {
+                "behavior": av_behavior,
+                "observation_type": "previous_agents_plus_start_time",
+            },
         },
-        environment_parameters = {
-            "save_every" : save_every,
+        environment_parameters={
+            "save_every": save_every,
         },
-        simulator_parameters = {
-            "network_name" : network,
-            "custom_network_folder" : custom_network_folder,
-            "sumo_type" : "sumo",
-            "simulation_timesteps" : max_start_time
+        simulator_parameters={
+            "network_name": network,
+            "custom_network_folder": custom_network_folder,
+            "sumo_type": "sumo",
+            "simulation_timesteps": max_start_time,
         },
-        plotter_parameters = {
-            "phases" : phases,
-            "phase_names" : phase_names,
-            "smooth_by" : smooth_by,
-            "plot_choices" : plot_choices,
-            "records_folder" : records_folder,
-            "plots_folder" : plots_folder
+        plotter_parameters={
+            "phases": phases,
+            "phase_names": phase_names,
+            "smooth_by": smooth_by,
+            "plot_choices": plot_choices,
+            "records_folder": records_folder,
+            "plots_folder": plots_folder,
         },
-        path_generation_parameters = {
-            "origins" : origins,
-            "destinations" : destinations,
-            "number_of_paths" : number_of_paths,
-            "beta" : path_gen_beta,
-            "num_samples" : num_samples,
-            "visualize_paths" : False
-        }
+        path_generation_parameters={
+            "origins": origins,
+            "destinations": destinations,
+            "number_of_paths": number_of_paths,
+            "beta": path_gen_beta,
+            "num_samples": num_samples,
+            "path_gen_workers": path_gen_workers,
+            "visualize_paths": False,
+        },
     )
 
     env.start()
