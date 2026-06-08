@@ -26,6 +26,7 @@
 | --- | --- | --- | --- |
 | **Provins** | 9 | 0.8 | 0.2 |
 | **Saint Arnoult** | 9 | 0.8 | 0.2 |
+| **Ingolstadt** | 13 | 0.8 | 0.2 |
 
 ### Similarity Measure (K-Medoids)
 
@@ -33,6 +34,7 @@
 | --- | --- | --- | --- |
 | **Provins** | 11 | 0.0 lub 0.1 | 1.0 lub 0.9 |
 | **Saint Arnoult** | 15 | 0.9 | 0.1 |
+| **Ingolstadt** | 19 | 0.9 | 0.1 |
 
 ### Spatial (Przestrzenne)
 

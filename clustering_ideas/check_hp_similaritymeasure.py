@@ -17,10 +17,10 @@ STEP_K = 2
 MAX_ITERS = 50
 print("Configuration set")
 
-CSV_PATH = 'clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv'
-PLOT_K_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_elbow_k_similaritymeasure_plot.png'
+CSV_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv'
+PLOT_K_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_elbow_k_similaritymeasure_plot.png'
 print("k plot")
-PLOT_W_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_weights_similaritymeasure_plot.png'
+PLOT_W_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_weights_similaritymeasure_plot.png'
 print("paths set")
 print("Paths set")
 
