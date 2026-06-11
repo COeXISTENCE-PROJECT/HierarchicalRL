@@ -89,7 +89,7 @@ if __name__ == "__main__":
         entity="mk-hrl",
         project="sandbox",
         name=args.id,
-        config=alg_params 
+        config=params
     )
 
     

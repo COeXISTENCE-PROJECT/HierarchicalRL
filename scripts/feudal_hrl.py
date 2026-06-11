@@ -459,7 +459,7 @@ if __name__ == "__main__":
             },
             "machine_parameters": {
                 "behavior": av_behavior,
-                "observation_type": observations,
+                "observation_type": "previous_agents_plus_start_time",
             },
         },
         environment_parameters={
@@ -655,4 +655,16 @@ if __name__ == "__main__":
         remove_additional_files=True,
     )
     run_metrics_analysis(exp_id, results_folder="../results")
+    
+    rewards_path = os.path.join(plots_folder, "rewards.png")
+    travel_times_path = os.path.join(plots_folder, "travel_times.png")
+    plots_to_log = {}
+    if os.path.exists(rewards_path):
+        plots_to_log["Plots/Rewards"] = wandb.Image(rewards_path)
+    if os.path.exists(travel_times_path):
+        plots_to_log["Plots/Travel_Times"] = wandb.Image(travel_times_path)
+    
+    if plots_to_log:
+        wandb.log(plots_to_log)
+        
     wandb.finish()
