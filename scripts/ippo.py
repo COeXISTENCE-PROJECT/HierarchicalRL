@@ -245,7 +245,7 @@ if __name__ == "__main__":
             },
             "machine_parameters" : {
                 "behavior" : av_behavior,
-                "observation_type" : "previous_agents_plus_start_time" #"previous_agents_plus_start_time"
+                "observation_type" : "observations" #"previous_agents_plus_start_time"
             }
         },
         environment_parameters = {
