@@ -5,26 +5,25 @@ import os
 import copy
 
 
-K = 12
+K = 12 
 MAX_ITER = 100
-EPISODES = 250  
+EPISODES = 1000
 
-PATHS_JSON = 'ingolstadt_custom_clustering/agent_paths.json'
-AGENTS_CSV = 'ingolstadt_custom_clustering/ingolstadt_custom_agents_coords.csv'
-OUTPUT_DIR_CSV = 'ingolstadt_custom_clustering'
-
+PATHS_JSON = 'provins_clustering/agent_paths.json'
+AGENTS_CSV = 'provins_clustering/provins_agents_coords.csv' 
+OUTPUT_DIR_CSV = 'provins_clustering'
 OUTPUT_DIR_JSON = '../config/algo_config/feudal_hrl'
 
 BASE_CONFIG = {
-    "training_eps": 5000,
-    "desc": "Initial feudal HRL config: discrete manager over route families and PPO-style worker updates.",
-    "manager_period": 100,
+    "training_eps": 1000,
+    "desc": "Grid search feudal HRL config for Provins.",
+    "manager_period": 1,
     "use_cluster_embedding": True,
     "cluster_source": "path",
-    "cluster_csv_path": "clustering_ideas/ingolstadt_custom_clustering/agents_clustered_by_path.csv",
+    "cluster_csv_path": "",
     "cluster_key_columns": ["start_time", "origin", "destination"],
     "num_subgoals": 4,
-    "num_clusters": 0,
+    "num_clusters": 12,
     "cluster_embed_dim": 8,
     "manager_hidden_dims": [128, 128],
     "controller_hidden_dims": [128, 128],
@@ -55,7 +54,7 @@ for i in range(11):
     name = f"path{int(w_path*100):02d}_time{int(w_time*100):02d}"
     weight_experiments.append({"name": name, "path_w": w_path, "time_w": w_time})
 
-print("Wczytywanie danych...")
+print("Wczytywanie danych Provins...")
 if not os.path.exists(PATHS_JSON) or not os.path.exists(AGENTS_CSV):
     print(f"BŁĄD: Nie znaleziono plików wejściowych w {OUTPUT_DIR_CSV}")
     exit(1)
@@ -69,7 +68,7 @@ n = len(agent_ids)
 times = df.set_index('id').loc[agent_ids, 'start_time'].values
 max_time_diff = times.max() - times.min()
 
-print("Obliczenie bazowych macierzy dystansu (Trasa i Czas)...")
+print("Prekalkulacja bazowych macierzy dystansu (Trasa i Czas)...")
 D_path = np.zeros((n, n))
 D_time = np.zeros((n, n))
 
@@ -100,30 +99,30 @@ def run_kmedoids(dist_mat, K, max_iter=100):
         medoids = new_medoids
     return np.argmin(dist_mat[medoids, :], axis=0)
 
-print(f"\nRozpoczynam pętlę dla {len(weight_experiments)} kombinacji wag...")
 os.makedirs(OUTPUT_DIR_JSON, exist_ok=True)
+print(f"\nRozpoczynam pętlę dla {len(weight_experiments)} kombinacji wag...")
 
 for exp in weight_experiments:
     print(f" -> Klastrowanie dla wag: PATH={exp['path_w']}, TIME={exp['time_w']}")
     dist_matrix = (exp['path_w'] * D_path) + (exp['time_w'] * D_time)
     clusters = run_kmedoids(dist_matrix, K, MAX_ITER)
     
+    # Zapis CSV
     df_out = pd.read_csv(AGENTS_CSV)
     df_out['cluster'] = clusters
     csv_filename = f"agents_clustered_{exp['name']}.csv"
     out_csv_path = os.path.join(OUTPUT_DIR_CSV, csv_filename)
     df_out.to_csv(out_csv_path, index=False)
     
+    # Zapis JSON
     new_config = copy.deepcopy(BASE_CONFIG)
-    new_config['cluster_csv_path'] = f"clustering_ideas/ingolstadt_custom_clustering/{csv_filename}"
-    new_config['num_subgoals'] = K
-    new_config['num_clusters'] = K
+    new_config['cluster_csv_path'] = f"clustering_ideas/provins_clustering/{csv_filename}"
     new_config['training_eps'] = EPISODES
     
-    json_filename = f"config_ing_{exp['name']}.json"
+    json_filename = f"config_prov_{exp['name']}.json"
     out_json_path = os.path.join(OUTPUT_DIR_JSON, json_filename)
     
     with open(out_json_path, 'w', encoding='utf-8') as f:
         json.dump(new_config, f, indent=4)
 
-print(f"\nSUKCES! Wygenerowano CSV w {OUTPUT_DIR_CSV} oraz 11 plików .json w {OUTPUT_DIR_JSON}.")
+print("\nSUKCES! Wygenerowano pliki dla Provins.")
