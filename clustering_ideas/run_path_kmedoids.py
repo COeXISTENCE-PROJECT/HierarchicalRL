@@ -1,14 +1,14 @@
 import numpy as np
 import pandas as pd
 
-K = 15  
+K = 12  
 MAX_ITER = 100
-# MATRIX_PATH = 'clustering_ideas/ingolstadt_custom_clustering/path_distance_matrix.npy'
-# AGENTS_PATH = 'clustering_ideas/ingolstadt_custom_clustering/ingolstadt_custom_agents_coords.csv'
-# OUTPUT_CSV = 'clustering_ideas/ingolstadt_custom_clustering/agents_clustered_by_path.csv'
-MATRIX_PATH = 'clustering_ideas/saint_arnoult_clustering/path_distance_matrix.npy'
-AGENTS_PATH = 'clustering_ideas/saint_arnoult_clustering/saint_arnoult_agents_coords.csv'
-OUTPUT_CSV = 'clustering_ideas/saint_arnoult_clustering/agents_clustered_by_path.csv'
+MATRIX_PATH = 'clustering_ideas/ingolstadt_custom_clustering/path_distance_matrix.npy'
+AGENTS_PATH = 'clustering_ideas/ingolstadt_custom_clustering/ingolstadt_custom_agents_coords.csv'
+OUTPUT_CSV = 'clustering_ideas/ingolstadt_custom_clustering/agents_clustered_by_path.csv'
+# MATRIX_PATH = 'clustering_ideas/saint_arnoult_clustering/path_distance_matrix.npy'
+# AGENTS_PATH = 'clustering_ideas/saint_arnoult_clustering/saint_arnoult_agents_coords.csv'
+# OUTPUT_CSV = 'clustering_ideas/saint_arnoult_clustering/agents_clustered_by_path.csv'
 
 dist_matrix = np.load(MATRIX_PATH)
 n = dist_matrix.shape[0]

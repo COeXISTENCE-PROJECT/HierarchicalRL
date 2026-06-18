@@ -3,17 +3,17 @@ import pandas as pd
 import json
 import os
 
-# NET_PATH = 'networks/ingolstadt_custom/ingolstadt_custom.net.xml'
-# AGENTS_PATH = 'clustering_ideas/ingolstadt_custom_clustering/ingolstadt_custom_agents_coords.csv'
-# OUTPUT_PATH = 'clustering_ideas/ingolstadt_custom_clustering/agent_paths.json'
+NET_PATH = 'networks/ingolstadt_custom/ingolstadt_custom.net.xml'
+AGENTS_PATH = 'clustering_ideas/ingolstadt_custom_clustering/ingolstadt_custom_agents_coords.csv'
+OUTPUT_PATH = 'clustering_ideas/ingolstadt_custom_clustering/agent_paths.json'
 
 # NET_PATH = 'networks/provins/provins.net.xml'
 # AGENTS_PATH = 'clustering_ideas/provins_clustering/provins_agents_coords.csv'
 # OUTPUT_PATH = 'clustering_ideas/provins_clustering/agent_paths.json'
 
-NET_PATH = 'networks/saint_arnoult/saint_arnoult.net.xml'
-AGENTS_PATH = 'clustering_ideas/saint_arnoult_clustering/saint_arnoult_agents_coords.csv'
-OUTPUT_PATH = 'clustering_ideas/saint_arnoult_clustering/agent_paths.json'
+# NET_PATH = 'networks/saint_arnoult/saint_arnoult.net.xml'
+# AGENTS_PATH = 'clustering_ideas/saint_arnoult_clustering/saint_arnoult_agents_coords.csv'
+# OUTPUT_PATH = 'clustering_ideas/saint_arnoult_clustering/agent_paths.json'
 
 net = sumolib.net.readNet(NET_PATH)
 df = pd.read_csv(AGENTS_PATH)
