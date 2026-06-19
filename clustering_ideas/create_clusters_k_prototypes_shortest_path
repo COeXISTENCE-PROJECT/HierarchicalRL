@@ -9,9 +9,9 @@ import random
 import json
 
 NUM_OF_ZONES = 5
-FINAL_CLUSTERS_NUM = 9 # Target number of final clusters
-TIME_WEIGHT = 0.1 # How heavily the algorithm penalizes for differences in departure time
-SPACE_WEIGHT = 0.9 # How heavily the algorithm penalizes for departing from/arriving at a different zone
+FINAL_CLUSTERS_NUM = 11 # Target number of final clusters
+TIME_WEIGHT = 1.0 # How heavily the algorithm penalizes for differences in departure time
+SPACE_WEIGHT = 0.0 # How heavily the algorithm penalizes for departing from/arriving at a different zone
 max_iters = 100
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,8 +148,8 @@ print(df_final.head(15))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
-df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes_shortest_path.csv', index=False)
+df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_k_prototypes_shortest_path_weighted_mse.csv', index=False)
 #df_final.to_csv('clustering_ideas\\provins_clustering\\agents_clustered_k_prototypes_shortest_path.csv', index=False)
 
-print("\nSaved to agents_clustered_k_prototypes_shortest_path.csv")
+print("\nSaved to agents_clustered_k_prototypes_shortest_path_weighted_mse.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -165,7 +165,8 @@ df_results['s_norm'] = (df_results['s_mse'] - s_min) / s_range
 df_results['t_norm'] = (df_results['t_mse'] - t_min) / t_range
 
 # Calculate distance to (0,0) for each combination of K and weights
-df_results['dist_to_origin'] = np.sqrt(df_results['s_norm']**2 + df_results['t_norm']**2)
+df_results['dist_to_origin'] = np.sqrt(df_results['sw'] * (df_results['s_norm'])**2 + df_results['tw'] * (df_results['t_norm'])**2)
+
 
 # For each K, find the weights that gave the smallest distance to (0,0)
 best_per_k_idx = df_results.groupby('k')['dist_to_origin'].idxmin()

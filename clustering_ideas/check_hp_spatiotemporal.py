@@ -17,8 +17,8 @@ MAX_K = 40
 STEP_K = 2
 TIME_THRESHOLD = 60
 
-CSV_PATH = 'clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv'
-PLOT_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_elbow_spatiotemporal_plot.png'
+CSV_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv'
+PLOT_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_elbow_spatiotemporal_plot.png'
 
 def find_optimal_k(k_values, error_values):
     x = np.array(k_values)

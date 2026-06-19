@@ -17,13 +17,13 @@ STEP_K = 2
 MAX_ITERS = 50
 print("Configuration set")
 
-CSV_PATH = 'clustering_ideas\\provins_clustering\\provins_agents_coords.csv'
+CSV_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv'
 print("csv")
-JSON_PATH = 'clustering_ideas\\provins_clustering\\shortest_path_metric_matrix.json'
+JSON_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json'
 print("json")
-PLOT_K_PATH = 'clustering_ideas\\provins_clustering\\auto_elbow_k_similaritymeasure_sp_plot.png'
+PLOT_K_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_elbow_k_similaritymeasure_sp_plot.png'
 print("k plot")
-PLOT_W_PATH = 'clustering_ideas\\provins_clustering\\auto_weights_similaritymeasure_sp_plot.png'
+PLOT_W_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_weights_similaritymeasure_sp_plot.png'
 print("paths set")
 
 def find_optimal_k(k_values, error_values):

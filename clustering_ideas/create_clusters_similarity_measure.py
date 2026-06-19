@@ -7,9 +7,9 @@ import pandas as pd
 import random
 import math
 
-TIME_WEIGHT = 0.9 # Importance of departure time similarity
-SPACE_WEIGHT = 0.1 # Importance of route (origin/destination) similarity
-FINAL_CLUSTERS_NUM = 19 # Number of desired clusters
+TIME_WEIGHT = 1.0 # Importance of departure time similarity
+SPACE_WEIGHT = 0.0 # Importance of route (origin/destination) similarity
+FINAL_CLUSTERS_NUM = 9 # Number of desired clusters
 max_iters = 100
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,6 +77,6 @@ print(df_final[['start_time', 'origin', 'destination', 'cluster']].head(10))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 #df_final.to_csv('clustering_ideas\\provins_clustering\\agents_clustered_with_similarity_measure.csv', index=False)
-df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_similarity_measure.csv', index=False)
-print("\nSaved to agents_clustered_with_similarity_measure.csv")
+df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_similarity_measure_weighted_mse.csv', index=False)
+print("\nSaved to agents_clustered_with_similarity_measure_weighted_mse.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
