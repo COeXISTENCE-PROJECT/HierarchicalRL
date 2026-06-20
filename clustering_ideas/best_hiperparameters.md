@@ -60,16 +60,16 @@
 
 | Miasto | `num_clusters` (K) | `TIME_WEIGHT` | `SPACE_WEIGHT` |
 | --- | --- | --- | --- |
-| **Provins** |  |  |  |
-| **Saint Arnoult** |  |  |  |
+| **Provins** | 11 | 1.0 | 0.0 |
+| **Saint Arnoult** | 11 | 1.0 | 0.0 |
 | **Ingolstadt** | 11 | 1.0 | 0.0 |
 
 ### Similarity Measure (K-Medoids)
 
 | Miasto | `num_clusters` (K) | `TIME_WEIGHT` | `SPACE_WEIGHT` |
 | --- | --- | --- | --- |
-| **Provins** |  |  |  |
-| **Saint Arnoult** |  |  |  |
+| **Provins** | 13 | 1.0 | 0.0 |
+| **Saint Arnoult** | 11 | 1.0 | 0.0 |
 | **Ingolstadt** | 9 | 1.0 | 0.0 |
 
 ---
@@ -80,16 +80,16 @@
 
 | Miasto | `num_clusters` (K) | `TIME_WEIGHT` | `SPACE_WEIGHT` |
 | --- | --- | --- | --- |
-| **Provins** |  |  |  |
-| **Saint Arnoult** |  |  |  |
+| **Provins** | 11 | 1.0 | 0.0 |
+| **Saint Arnoult** | 11 | 1.0 | 0.0 |
 | **Ingolstadt** | 11 | 1.0 | 0.0 |
 
 ### Similarity Measure (K-Medoids)
 
 | Miasto | `num_clusters` (K) | `TIME_WEIGHT` | `SPACE_WEIGHT` |
 | --- | --- | --- | --- |
-| **Provins** |  |  |  |
-| **Saint Arnoult** |  |  |  |
+| **Provins** | 13 | 1.0 | 0.0 |
+| **Saint Arnoult** | 11 | 1.0 | 0.0 |
 | **Ingolstadt** | 9 | 1.0 | 1.0 |
 
 ### Spatial (Przestrzenne)
