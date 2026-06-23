@@ -4,7 +4,7 @@
     "manager_period": 1,
     "use_cluster_embedding": true,
     "cluster_source": "similarity_measure",
-    "cluster_csv_path": "clustering_ideas/saint_arnoult_clustering/agents_clustered_with_similarity_measure.csv",
+    "cluster_csv_path": "clustering_ideas/saint_arnoult_clustering/agents_clustered_with_similarity_measure_weighted_mse.csv",
     "cluster_key_columns": [
         "start_time",
         "origin",
