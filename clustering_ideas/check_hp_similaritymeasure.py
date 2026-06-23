@@ -17,10 +17,10 @@ STEP_K = 2
 MAX_ITERS = 50
 print("Configuration set")
 
-CSV_PATH = 'clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv'
-PLOT_K_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_elbow_k_similaritymeasure_plot.png'
+CSV_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv'
+PLOT_K_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_elbow_k_similaritymeasure_plot.png'
 print("k plot")
-PLOT_W_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_weights_similaritymeasure_plot.png'
+PLOT_W_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_weights_similaritymeasure_plot.png'
 print("paths set")
 print("Paths set")
 
@@ -46,27 +46,35 @@ df = pd.read_csv(CSV_PATH)
 min_t, max_t = df['start_time'].min(), df['start_time'].max()
 range_t = max_t - min_t if max_t != min_t else 1
 df['t_norm'] = (df['start_time'] - min_t) / range_t
+min_coord = min(df['origin_x'].min(), df['origin_y'].min(), df['dest_x'].min(), df['dest_y'].min())
+max_coord = max(df['origin_x'].max(), df['origin_y'].max(), df['dest_x'].max(), df['dest_y'].max())
+range_coord = max_coord - min_coord if max_coord != min_coord else 1
 
-features = ['t_norm', 'origin_x', 'origin_y', 'dest_x', 'dest_y']
+df['ox_norm'] = (df['origin_x'] - min_coord) / range_coord
+df['oy_norm'] = (df['origin_y'] - min_coord) / range_coord
+df['dx_norm'] = (df['dest_x'] - min_coord) / range_coord
+df['dy_norm'] = (df['dest_y'] - min_coord) / range_coord
+features = ['t_norm', 'ox_norm', 'oy_norm', 'dx_norm', 'dy_norm']
+
 def calculate_euclidean_distance(agent_row, center_row, tw, sw):
     diff_time = abs(agent_row['t_norm'] - center_row['t_norm'])
     
-    orig_dist = math.sqrt((agent_row['origin_x'] - center_row['origin_x'])**2 + 
-                          (agent_row['origin_y'] - center_row['origin_y'])**2)
+    orig_dist = math.sqrt((agent_row['ox_norm'] - center_row['ox_norm'])**2 + 
+                          (agent_row['oy_norm'] - center_row['oy_norm'])**2)
                           
-    dest_dist = math.sqrt((agent_row['dest_x'] - center_row['dest_x'])**2 + 
-                          (agent_row['dest_y'] - center_row['dest_y'])**2)
+    dest_dist = math.sqrt((agent_row['dx_norm'] - center_row['dx_norm'])**2 + 
+                          (agent_row['dy_norm'] - center_row['dy_norm'])**2)
                           
-    return (tw * diff_time) + (sw * (orig_dist + dest_dist))
+    return (tw * diff_time) + (sw * (orig_dist + dest_dist)/2)
 
 def get_pure_spatial_error(agent_row, center_row):
-    orig_dist = math.sqrt((agent_row['origin_x'] - center_row['origin_x'])**2 + 
-                          (agent_row['origin_y'] - center_row['origin_y'])**2)
+    orig_dist = math.sqrt((agent_row['ox_norm'] - center_row['ox_norm'])**2 + 
+                          (agent_row['oy_norm'] - center_row['oy_norm'])**2)
                           
-    dest_dist = math.sqrt((agent_row['dest_x'] - center_row['dest_x'])**2 + 
-                          (agent_row['dest_y'] - center_row['dest_y'])**2)
+    dest_dist = math.sqrt((agent_row['dx_norm'] - center_row['dx_norm'])**2 + 
+                          (agent_row['dy_norm'] - center_row['dy_norm'])**2)
                           
-    return orig_dist + dest_dist
+    return (orig_dist + dest_dist)/2
 
 def get_pure_temporal_error(agent_row, center_row):
     return abs(agent_row['t_norm'] - center_row['t_norm'])
@@ -101,17 +109,17 @@ for current_k in k_list:
                 cluster_cars = df[df['cluster'] == i]
                 if not cluster_cars.empty:
                     ideal_t = cluster_cars['t_norm'].mean()
-                    ideal_ox = cluster_cars['origin_x'].mean()
-                    ideal_oy = cluster_cars['origin_y'].mean()
-                    ideal_dx = cluster_cars['dest_x'].mean()
-                    ideal_dy = cluster_cars['dest_y'].mean()
+                    ideal_ox = cluster_cars['ox_norm'].mean()
+                    ideal_oy = cluster_cars['oy_norm'].mean()
+                    ideal_dx = cluster_cars['dx_norm'].mean()
+                    ideal_dy = cluster_cars['dy_norm'].mean()
                     
                     virtual_center = {
                         't_norm': ideal_t, 
-                        'origin_x': ideal_ox, 
-                        'origin_y': ideal_oy, 
-                        'dest_x': ideal_dx, 
-                        'dest_y': ideal_dy
+                        'ox_norm': ideal_ox, 
+                        'oy_norm': ideal_oy, 
+                        'dx_norm': ideal_dx, 
+                        'dy_norm': ideal_dy
                     }
                     
                     best_car = None
@@ -124,10 +132,10 @@ for current_k in k_list:
                             
                     new_centroids.append({
                         't_norm': best_car['t_norm'], 
-                        'origin_x': best_car['origin_x'], 
-                        'origin_y': best_car['origin_y'],
-                        'dest_x': best_car['dest_x'], 
-                        'dest_y': best_car['dest_y']
+                        'ox_norm': best_car['ox_norm'], 
+                        'oy_norm': best_car['oy_norm'],
+                        'dx_norm': best_car['dx_norm'], 
+                        'dy_norm': best_car['dy_norm']
                     })
                 else:
                     new_centroids.append(centroids[i])
@@ -165,7 +173,7 @@ df_results['s_norm'] = (df_results['s_mse'] - s_min) / s_range
 df_results['t_norm'] = (df_results['t_mse'] - t_min) / t_range
 
 # Calculate distance to (0,0) for each combination of K and weights
-df_results['dist_to_origin'] = np.sqrt(df_results['sw'] * (df_results['s_norm'])**2 + df_results['tw'] * (df_results['t_norm'])**2)
+df_results['dist_to_origin'] = np.sqrt((df_results['s_norm'])**2 + (df_results['t_norm'])**2)
 
 # For each K, find the weights that gave the smallest distance to (0,0)
 best_per_k_idx = df_results.groupby('k')['dist_to_origin'].idxmin()

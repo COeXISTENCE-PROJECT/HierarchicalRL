@@ -17,13 +17,13 @@ STEP_K = 2
 MAX_ITERS = 50
 print("Configuration set")
 
-CSV_PATH = 'clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv'
+CSV_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv'
 print("csv")
-JSON_PATH = 'clustering_ideas\\saint_arnoult_clustering\\shortest_path_metric_matrix.json'
+JSON_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json'
 print("json")
-PLOT_K_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_elbow_k_similaritymeasure_sp_plot.png'
+PLOT_K_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_elbow_k_similaritymeasure_sp_plot.png'
 print("k plot")
-PLOT_W_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_weights_similaritymeasure_sp_plot.png'
+PLOT_W_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_weights_similaritymeasure_sp_plot.png'
 print("paths set")
 
 def find_optimal_k(k_values, error_values):
@@ -58,12 +58,12 @@ def calculate_network_distance(agent_row, center_row, tw, sw):
     diff_time = abs(agent_row['t_norm'] - center_row['t_norm'])
     orig_dist = dist_matrix[str(agent_row['origin_real_id'])][str(center_row['origin_real_id'])]
     dest_dist = dist_matrix[str(agent_row['dest_real_id'])][str(center_row['dest_real_id'])]
-    return (tw * diff_time) + (sw * (orig_dist + dest_dist))
+    return (tw * diff_time) + (sw * (orig_dist + dest_dist)/2)
 
 def get_pure_spatial_error(agent_row, center_row):
     orig_dist = dist_matrix[str(agent_row['origin_real_id'])][str(center_row['origin_real_id'])]
     dest_dist = dist_matrix[str(agent_row['dest_real_id'])][str(center_row['dest_real_id'])]
-    return orig_dist + dest_dist
+    return (orig_dist + dest_dist)/2
 
 def get_pure_temporal_error(agent_row, center_row):
     return abs(agent_row['t_norm'] - center_row['t_norm'])
@@ -148,7 +148,7 @@ df_results['s_norm'] = (df_results['s_mse'] - s_min) / s_range
 df_results['t_norm'] = (df_results['t_mse'] - t_min) / t_range
 
 # Calculate distance to (0,0) for each combination of K and weights
-df_results['dist_to_origin'] = np.sqrt(df_results['sw'] * (df_results['s_norm'])**2 + df_results['tw'] * (df_results['t_norm'])**2)
+df_results['dist_to_origin'] = np.sqrt((df_results['s_norm'])**2 + (df_results['t_norm'])**2)
 # For each K, find the weights that gave the smallest distance to (0,0)
 best_per_k_idx = df_results.groupby('k')['dist_to_origin'].idxmin()
 best_per_k = df_results.loc[best_per_k_idx].sort_values('k').reset_index(drop=True)

@@ -18,10 +18,10 @@ STEP_K = 2
 MAX_ITERS = 50
 print("Configuration set")
 
-CSV_PATH = 'clustering_ideas\\saint_arnoult_clustering\\saint_arnoult_agents_coords.csv'
-JSON_PATH = 'clustering_ideas\\saint_arnoult_clustering\\shortest_path_metric_matrix.json'
-PLOT_K_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_elbow_kprototypes_sp_plot.png'
-PLOT_W_PATH = 'clustering_ideas\\saint_arnoult_clustering\\auto_weights_kprototypes_sp_plot.png'
+CSV_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\ingolstadt_custom_agents_coords.csv'
+JSON_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\shortest_path_metric_matrix.json'
+PLOT_K_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_elbow_kprototypes_sp_plot.png'
+PLOT_W_PATH = 'clustering_ideas\\ingolstadt_custom_clustering\\auto_weights_kprototypes_sp_plot.png'
 print("Paths set")
 
 def find_optimal_k(k_values, error_values):
@@ -176,7 +176,7 @@ df_results['s_norm'] = (df_results['s_mse'] - s_min) / s_range
 df_results['t_norm'] = (df_results['t_mse'] - t_min) / t_range
 
 # Calculating distance from (0,0) for each combination
-df_results['dist_to_origin'] = np.sqrt(df_results['sw'] * (df_results['s_norm'])**2 + df_results['tw'] * (df_results['t_norm'])**2)
+df_results['dist_to_origin'] = np.sqrt((df_results['s_norm'])**2 + (df_results['t_norm'])**2)
 # Extracting optimal weights for the chosen K - ones that minimize the distance to (0,0)
 best_per_k_idx = df_results.groupby('k')['dist_to_origin'].idxmin()
 best_per_k = df_results.loc[best_per_k_idx].sort_values('k').reset_index(drop=True)
