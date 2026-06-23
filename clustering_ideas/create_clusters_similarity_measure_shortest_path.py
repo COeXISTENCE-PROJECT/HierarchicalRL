@@ -9,9 +9,9 @@ import pandas as pd
 import random
 import json
 
-TIME_WEIGHT = 1.0 # Importance of departure time similarity
-SPACE_WEIGHT = 0.0 # Importance of route (origin/destination) similarity
-FINAL_CLUSTERS_NUM = 9 # Number of desired clusters
+TIME_WEIGHT = 0.7 # Importance of departure time similarity
+SPACE_WEIGHT = 0.3 # Importance of route (origin/destination) similarity
+FINAL_CLUSTERS_NUM = 19 # Number of desired clusters
 max_iters = 100
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +43,7 @@ def calculate_network_distance(agent_row, center_row):
     orig_dist = dist_matrix[str(agent_row['origin_real_id'])][str(center_row['origin_real_id'])]
     dest_dist = dist_matrix[str(agent_row['dest_real_id'])][str(center_row['dest_real_id'])]
     
-    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (orig_dist + dest_dist))
+    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (orig_dist + dest_dist)/2)
 
 def get_mode(lst):
     return max(set(lst), key=lst.count)

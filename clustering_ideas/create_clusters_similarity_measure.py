@@ -7,9 +7,9 @@ import pandas as pd
 import random
 import math
 
-TIME_WEIGHT = 1.0 # Importance of departure time similarity
-SPACE_WEIGHT = 0.0 # Importance of route (origin/destination) similarity
-FINAL_CLUSTERS_NUM = 9 # Number of desired clusters
+TIME_WEIGHT = 0.9 # Importance of departure time similarity
+SPACE_WEIGHT = 0.1 # Importance of route (origin/destination) similarity
+FINAL_CLUSTERS_NUM = 19 # Number of desired clusters
 max_iters = 100
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,7 +42,7 @@ def calculate_custom_distance(agent, center):
     diff_time = abs(agent[0] - center[0])
     dist_origin = math.sqrt((agent[1] - center[1])**2 + (agent[2] - center[2])**2)
     dist_dest = math.sqrt((agent[3] - center[3])**2 + (agent[4] - center[4])**2)
-    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (dist_origin + dist_dest))
+    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (dist_origin + dist_dest)/2)
 
 for iteration in range(max_iters):
     clusters = []
