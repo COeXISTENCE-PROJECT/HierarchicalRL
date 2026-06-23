@@ -1,5 +1,5 @@
 # ERROR = 0.5xMSE_TIME + 0.5xMSE_SPACE
-## Z wykorzystaniem Shortest Path
+## Shortest Path distance
 
 ### K-Prototypes
 
@@ -19,7 +19,7 @@
 
 ---
 
-## Bez odległości Shortest Path (Euklidesowe)
+## Euclidean distance
 
 ### K-Prototypes
 
@@ -37,7 +37,7 @@
 | **Saint Arnoult** | 13 | 0.3 | 0.7 |
 | **Ingolstadt** | 19 | 0.9 | 0.1 |
 
-### Spatial (Przestrzenne)
+### Spatial
 
 | Miasto | Początkowe `K_initial` | Ostateczna liczba klastrów (po fuzji) |
 | --- | --- | --- |
@@ -45,7 +45,7 @@
 | **Saint Arnoult** | 12 | 6 |
 | **Ingolstadt** | 8/12 | 1/5 |
 
-### Spatiotemporal (Czasoprzestrzenne)
+### Spatiotemporal
 
 | Miasto | Początkowe `K_initial` | Ostateczna liczba klastrów (po fuzji) |
 | --- | --- | --- |
@@ -54,7 +54,7 @@
 | **Ingolstadt** | 12 | 11 |
 
 # ERROR = TIME_WEIGHTxMSE_TIME + SPACE_WEIGHTxMSE_SPACE
-## Z wykorzystaniem Shortest Path
+## Shortest Path distance
 
 ### K-Prototypes
 
@@ -74,7 +74,7 @@
 
 ---
 
-## Bez odległości Shortest Path (Euklidesowe)
+## Euclidean distance
 
 ### K-Prototypes
 
@@ -92,18 +92,3 @@
 | **Saint Arnoult** | 11 | 1.0 | 0.0 |
 | **Ingolstadt** | 9 | 1.0 | 1.0 |
 
-### Spatial (Przestrzenne)
-
-| Miasto | Początkowe `K_initial` | Ostateczna liczba klastrów (po fuzji) |
-| --- | --- | --- |
-| **Provins** |  |  |
-| **Saint Arnoult** |  |  |
-| **Ingolstadt** |  |  |
-
-### Spatiotemporal (Czasoprzestrzenne)
-
-| Miasto | Początkowe `K_initial` | Ostateczna liczba klastrów (po fuzji) |
-| --- | --- | --- |
-| **Provins** |  |  |
-| **Saint Arnoult** |  |  |
-| **Ingolstadt** |  |  |
