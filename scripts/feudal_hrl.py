@@ -410,10 +410,16 @@ if __name__ == "__main__":
     key_columns = alg_params.get("cluster_key_columns", ["start_time", "origin", "destination"])
     agent_cluster_map = {}
 
-    if cluster_csv_path and os.path.exists(cluster_csv_path):
-        cluster_lookup, num_clusters = load_cluster_lookup(cluster_csv_path, key_columns)
-        agent_cluster_map, missing_indices = build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns)
-        params["num_clusters"] = num_clusters
+    if alg_params.get("use_cluster_embedding", False):
+        if cluster_csv_path and os.path.exists(cluster_csv_path):
+            cluster_lookup, num_clusters = load_cluster_lookup(cluster_csv_path, key_columns)
+            agent_cluster_map, missing_indices = build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns)
+            params["num_clusters"] = num_clusters
+        else:
+            raise FileNotFoundError(
+                f"\n[BŁĄD HRL] 'use_cluster_embedding'jest na true, ale nie znaleziono pliku: '{cluster_csv_path}'. "
+                f"Sprawdź ścieżkę w config.json!"
+            )
     else:
         params["num_clusters"] = 1
 
