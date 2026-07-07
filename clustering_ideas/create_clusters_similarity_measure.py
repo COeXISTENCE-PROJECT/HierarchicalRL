@@ -42,7 +42,7 @@ def calculate_custom_distance(agent, center):
     diff_time = abs(agent[0] - center[0])
     dist_origin = math.sqrt((agent[1] - center[1])**2 + (agent[2] - center[2])**2)
     dist_dest = math.sqrt((agent[3] - center[3])**2 + (agent[4] - center[4])**2)
-    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (dist_origin + dist_dest))
+    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (dist_origin + dist_dest)/2)
 
 for iteration in range(max_iters):
     clusters = []
@@ -77,6 +77,6 @@ print(df_final[['start_time', 'origin', 'destination', 'cluster']].head(10))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 #df_final.to_csv('clustering_ideas\\provins_clustering\\agents_clustered_with_similarity_measure.csv', index=False)
-df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_similarity_measure.csv', index=False)
-print("\nSaved to agents_clustered_with_similarity_measure.csv")
+df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_with_similarity_measure_weighted_mse.csv', index=False)
+print("\nSaved to agents_clustered_with_similarity_measure_weighted_mse.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

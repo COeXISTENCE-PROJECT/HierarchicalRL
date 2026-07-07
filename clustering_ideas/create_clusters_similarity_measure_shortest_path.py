@@ -9,8 +9,8 @@ import pandas as pd
 import random
 import json
 
-TIME_WEIGHT = 0.8 # Importance of departure time similarity
-SPACE_WEIGHT = 0.2 # Importance of route (origin/destination) similarity
+TIME_WEIGHT = 0.7 # Importance of departure time similarity
+SPACE_WEIGHT = 0.3 # Importance of route (origin/destination) similarity
 FINAL_CLUSTERS_NUM = 19 # Number of desired clusters
 max_iters = 100
 
@@ -43,7 +43,7 @@ def calculate_network_distance(agent_row, center_row):
     orig_dist = dist_matrix[str(agent_row['origin_real_id'])][str(center_row['origin_real_id'])]
     dest_dist = dist_matrix[str(agent_row['dest_real_id'])][str(center_row['dest_real_id'])]
     
-    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (orig_dist + dest_dist))
+    return (TIME_WEIGHT * diff_time) + (SPACE_WEIGHT * (orig_dist + dest_dist)/2)
 
 def get_mode(lst):
     return max(set(lst), key=lst.count)
@@ -98,6 +98,6 @@ print(df_final[['start_time', 'origin', 'destination', 'cluster']].head(10))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ADJUST THIS PATH IF NEEDED
 # df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_similarity_measure_shortest_path.csv', index=False)
-df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_similarity_measure_shortest_path.csv', index=False)
-print("Gotowe! Zapisano wyniki do agents_clustered_similarity_measure_shortest_path.csv")
+df_final.to_csv('clustering_ideas\\ingolstadt_custom_clustering\\agents_clustered_similarity_measure_shortest_path_weighted_mse.csv', index=False)
+print("Gotowe! Zapisano wyniki do agents_clustered_similarity_measure_shortest_path_weighted_mse.csv")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
