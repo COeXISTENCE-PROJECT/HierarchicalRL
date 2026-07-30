@@ -1,7 +1,7 @@
 {
     "training_eps": 1000,
     "desc": "Initial feudal HRL config: discrete manager over route families and PPO-style worker updates.",
-    "manager_period": 1,
+    "manager_period": 5,
     "use_cluster_embedding": true,
     "cluster_source": "similarity_measure_shortest_path",
     "cluster_csv_path": "clustering_ideas/saint_arnoult_clustering/agents_clustered_similarity_measure_shortest_path_weighted_mse.csv",
