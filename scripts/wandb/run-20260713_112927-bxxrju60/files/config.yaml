@@ -1,0 +1,178 @@
+_wandb:
+    value:
+        cli_version: 0.27.1
+        e:
+            rvvgqawav23bd726pt1x62t5vf1ja02a:
+                args:
+                    - --id
+                    - saint_arnoult_local_random_medium
+                    - --task-conf
+                    - config1
+                    - --env-conf
+                    - config1
+                    - --alg-conf
+                    - config_sa_random_medium
+                    - --net
+                    - saint_arnoult
+                codePath: scripts\feudal_hrl.py
+                codePathLocal: feudal_hrl.py
+                cpu_count: 12
+                cpu_count_logical: 16
+                disk:
+                    /:
+                        total: "510774996992"
+                        used: "489907720192"
+                executable: C:\Users\pawel\Documents\GMUM\HRL_Routing_Project\.venv\Scripts\python.exe
+                git:
+                    commit: c592b3492db07fe2e2c355003dcc6b4234bbdbd8
+                    remote: https://github.com/COeXISTENCE-PROJECT/HierarchicalRL.git
+                host: hppd
+                memory:
+                    total: "34011811840"
+                os: Windows-11-10.0.26200-SP0
+                program: C:\Users\pawel\Documents\GMUM\HRL_Routing_Project\HierarchicalRL\scripts\feudal_hrl.py
+                python: CPython 3.13.14
+                root: C:\Users\pawel\Documents\GMUM\HRL_Routing_Project\HierarchicalRL\scripts
+                startedAt: "2026-07-13T09:29:27.569378Z"
+                writerId: rvvgqawav23bd726pt1x62t5vf1ja02a
+        m: []
+        python_version: 3.13.14
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 2
+                - 13
+                - 16
+                - 61
+            "4": 3.13.14
+            "5": 0.27.1
+            "8":
+                - 3
+            "12": 0.27.1
+            "13": windows-amd64
+action_mask_strategy:
+    value: uniform_bins
+alg_config:
+    value: config_sa_random_medium
+algorithm:
+    value: feudal_hrl
+av_behavior:
+    value: selfish
+batch_size:
+    value: 64
+cluster_csv_path:
+    value: clustering_ideas/saint_arnoult_clustering/agents_clustered_random_medium_K12.csv
+cluster_embed_dim:
+    value: 8
+cluster_key_columns:
+    value:
+        - start_time
+        - origin
+        - destination
+cluster_source:
+    value: agents_clustered_random_medium_K12
+controller_clip_eps:
+    value: 0.2
+controller_entropy_coef:
+    value: 0.01
+controller_epochs:
+    value: 3
+controller_hidden_dims:
+    value:
+        - 128
+        - 128
+controller_lr:
+    value: 0.0003
+env_config:
+    value: config1
+env_seed:
+    value: 42
+goal_switch_penalty:
+    value: 0
+human_alpha:
+    value: 0.2
+human_beta:
+    value: -1.5
+human_beta_randomness:
+    value: 0.1
+human_deterministic:
+    value: true
+human_learning_episodes:
+    value: 200
+human_model:
+    value: gawron
+intrinsic_reward_weight:
+    value: 0.15
+manager_clip_eps:
+    value: 0.2
+manager_entropy_coef:
+    value: 0.01
+manager_epochs:
+    value: 3
+manager_hidden_dims:
+    value:
+        - 128
+        - 128
+manager_lr:
+    value: 0.0003
+manager_period:
+    value: 1
+manager_reward_weight:
+    value: 1
+network:
+    value: saint_arnoult
+normalize_advantage:
+    value: true
+num_agents:
+    value: 222
+num_clusters:
+    value: 13
+num_machines:
+    value: 88
+num_samples:
+    value: 10
+num_subgoals:
+    value: 4
+number_of_paths:
+    value: 4
+observations:
+    value: previous_agents_plus_start_time
+path_gen_beta:
+    value: -5
+path_gen_workers:
+    value: 3
+plot_choices:
+    value: basic
+plot_every:
+    value: 50
+ratio_machines:
+    value: 0.4
+save_every:
+    value: 5
+save_subgoal_records:
+    value: true
+script:
+    value: scripts/feudal_hrl.py
+should_humans_adapt:
+    value: false
+smooth_by:
+    value: 10
+subgoal_embed_dim:
+    value: 16
+task_config:
+    value: config1
+test_eps:
+    value: 100
+torch_seed:
+    value: 42
+training_eps:
+    value: 1000
+update_every:
+    value: 2
+use_cluster_embedding:
+    value: true
+worker_pretrain_epochs:
+    value: 0
