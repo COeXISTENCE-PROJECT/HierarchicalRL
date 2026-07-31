@@ -10,8 +10,8 @@ import os
 # 3. Bardzo dużo klastrów (np. 3-4 auta na klaster)
 
 
-INPUT_CSV = 'clustering_ideas/saint_arnoult_clustering/saint_arnoult_agents_coords.csv'
-OUTPUT_DIR = 'clustering_ideas/saint_arnoult_clustering'
+INPUT_CSV = 'clustering_ideas/provins_clustering/provins_agents_coords.csv'
+OUTPUT_DIR = 'clustering_ideas/provins_clustering'
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
