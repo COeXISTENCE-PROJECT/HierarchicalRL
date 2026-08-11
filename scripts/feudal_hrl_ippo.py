@@ -93,6 +93,7 @@ class Transition:
     extrinsic_reward: float
     intrinsic_reward: float
     manager_step: bool
+    action_mask: np.ndarray
 
 
 class FeudalClusterBrain(BaseLearningModel):
@@ -125,11 +126,11 @@ class FeudalClusterBrain(BaseLearningModel):
         self.goal_switch_penalty = float(config.get("goal_switch_penalty", 0.0))
         self.action_mask_strategy = str(config.get("action_mask_strategy", "uniform_bins"))
         self.deterministic = False
-   
+        
         self.memory: List[Transition] = []
         self.loss: List[Dict[str, float]] = []
-        self.pending = {} #Collects pending transitions for each agent until they terminate or truncate
-        self.agent_states = {}  #Collects agents states, including decision counts and subgoals
+        self.pending = {}
+        self.agent_states = {}
 
         self.manager = FeudalManager(
             obs_dim=state_size,
@@ -165,7 +166,6 @@ class FeudalClusterBrain(BaseLearningModel):
     def _build_uniform_subgoal_mask(self, subgoal: int) -> torch.Tensor:
         if self.action_mask_strategy != "uniform_bins":
             return torch.ones((1, self.action_space_size), dtype=torch.float32, device=self.device)
-
         bins = np.array_split(np.arange(self.action_space_size), self.num_subgoals)
         rotated = (subgoal + self.cluster_id) % self.num_subgoals
         chosen = bins[rotated]
@@ -176,9 +176,10 @@ class FeudalClusterBrain(BaseLearningModel):
     def act(self, state, agent_id: str, action_mask=None, record=True):
         state_array = np.asarray(state, dtype=np.float32)
         ag_state = self._get_agent_state(agent_id)
-        manager_step = ag_state["current_subgoal"] is None or (ag_state["decision_count"] % self.manager_period == 0)
         
-        #MANAGER
+        manager_step = (ag_state["current_subgoal"] is None) or (ag_state["decision_count"] % self.manager_period == 0)
+        
+        # MANAGER
         if manager_step:
             state_tensor = self._to_tensor(state_array)
             if getattr(self, "use_cluster_embedding", False):
@@ -197,14 +198,12 @@ class FeudalClusterBrain(BaseLearningModel):
         # CONTROLLER
         state_tensor = self._to_tensor(state_array)
         subgoal_tensor = torch.tensor([ag_state["current_subgoal"]], dtype=torch.long, device=self.device)
-        
         sg_mask = self._build_uniform_subgoal_mask(ag_state["current_subgoal"])
         
-        # Combine subgoal mask with physical action mask if provided
         if action_mask is not None:
             phys_mask = torch.tensor(action_mask, dtype=torch.float32, device=self.device).unsqueeze(0)
             final_mask = sg_mask * phys_mask
-            if final_mask.sum() == 0:  #If the combined mask is empty, fallback to physical mask
+            if final_mask.sum() == 0:
                 final_mask = phys_mask
         else:
             final_mask = sg_mask
@@ -217,6 +216,7 @@ class FeudalClusterBrain(BaseLearningModel):
         )
 
         if record:
+            mask_np = (final_mask.squeeze(0).cpu().numpy() > 0.5).astype(bool)
             self.pending[agent_id] = {
                 "state": state_array.copy(),
                 "subgoal": int(ag_state["current_subgoal"]),
@@ -225,7 +225,7 @@ class FeudalClusterBrain(BaseLearningModel):
                 "controller_log_prob": float(controller_output.log_prob),
                 "manager_step": manager_step,
                 "previous_subgoal": ag_state["previous_subgoal"],
-                "current_subgoal": ag_state["current_subgoal"]
+                "action_mask": mask_np
             }
 
         ag_state["decision_count"] += 1
@@ -238,7 +238,8 @@ class FeudalClusterBrain(BaseLearningModel):
         stub = self.pending.pop(agent_id)
         reward = float(reward)
         intrinsic_reward = 0.0
-        if stub["previous_subgoal"] is not None and stub["current_subgoal"] != stub["previous_subgoal"]:
+        
+        if stub["previous_subgoal"] is not None and stub["subgoal"] != stub["previous_subgoal"]:
             intrinsic_reward -= self.goal_switch_penalty
         intrinsic_reward += 1.0 / max(self.num_subgoals, 1)
 
@@ -251,6 +252,7 @@ class FeudalClusterBrain(BaseLearningModel):
             extrinsic_reward=reward,
             intrinsic_reward=intrinsic_reward,
             manager_step=bool(stub["manager_step"]),
+            action_mask=stub["action_mask"],
         )
         self.memory.append(record)
 
@@ -258,7 +260,8 @@ class FeudalClusterBrain(BaseLearningModel):
         if not self.normalize_advantage or x.numel() <= 1: return x
         return (x - x.mean()) / (x.std() + 1e-8)
 
-    def _controller_update(self, batch: List[Transition]) -> float:
+    def _controller_update(self, batch: List[Transition]) -> Optional[float]:
+        if len(batch) < 2: return None 
         states = torch.as_tensor(np.stack([b.state for b in batch]), dtype=torch.float32, device=self.device)
         subgoals = torch.as_tensor([b.subgoal for b in batch], dtype=torch.long, device=self.device)
         actions = torch.as_tensor([b.action for b in batch], dtype=torch.long, device=self.device)
@@ -267,73 +270,87 @@ class FeudalClusterBrain(BaseLearningModel):
             [b.extrinsic_reward + self.intrinsic_reward_weight * b.intrinsic_reward for b in batch],
             dtype=torch.float32, device=self.device
         )
-        advantages = self._normalize(rewards)
         
-        losses = []
-        for _ in range(self.controller_epochs):
-            action_masks = torch.cat([self._build_uniform_subgoal_mask(int(sg)) for sg in subgoals.tolist()], dim=0)
-            dist = self.controller.dist(states, subgoals, action_mask=action_masks)
-            new_log_probs = dist.log_prob(actions)
-            ratio = torch.exp(new_log_probs - old_log_probs)
-            surr1 = ratio * advantages
-            surr2 = torch.clamp(ratio, 1 - self.controller_clip_eps, 1 + self.controller_clip_eps) * advantages
-            entropy = dist.entropy().mean()
-            loss = -torch.min(surr1, surr2).mean() - self.controller_entropy_coef * entropy
-            self.controller_optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.controller.parameters(), max_norm=1.0)
-            self.controller_optimizer.step()
-            losses.append(float(loss.item()))
-        return float(np.mean(losses))
+        advantages = self._normalize(rewards)
+        action_masks = torch.as_tensor(np.stack([b.action_mask for b in batch]), dtype=torch.bool, device=self.device)
+        
+        dist = self.controller.dist(states, subgoals, action_mask=action_masks)
+        new_log_probs = dist.log_prob(actions)
+        ratio = torch.exp(new_log_probs - old_log_probs)
+        surr1 = ratio * advantages
+        surr2 = torch.clamp(ratio, 1 - self.controller_clip_eps, 1 + self.controller_clip_eps) * advantages
+        entropy = dist.entropy().mean()
+        
+        loss = -torch.min(surr1, surr2).mean() - self.controller_entropy_coef * entropy
+        
+        self.controller_optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.controller.parameters(), max_norm=1.0)
+        self.controller_optimizer.step()
+        
+        return float(loss.item())
 
-    def _manager_update(self, batch: List[Transition]) -> float:
+    def _manager_update(self, batch: List[Transition]) -> Optional[float]:
         manager_batch = [b for b in batch if b.manager_step]
-        if not manager_batch: 
-            return 0.0
+        if len(manager_batch) < 2: return None
+        
         states = torch.as_tensor(np.stack([b.state for b in manager_batch]), dtype=torch.float32, device=self.device)
         subgoals = torch.as_tensor([b.subgoal for b in manager_batch], dtype=torch.long, device=self.device)
         old_log_probs = torch.as_tensor([b.manager_log_prob for b in manager_batch], dtype=torch.float32, device=self.device)
         rewards = torch.as_tensor(
             [self.manager_reward_weight * b.extrinsic_reward for b in manager_batch], 
-            dtype=torch.float32,
-            device=self.device
+            dtype=torch.float32, device=self.device
         )
         advantages = self._normalize(rewards)
         
-        losses = []
-        
         if getattr(self, "use_cluster_embedding", False):
             cluster_ids = torch.full((len(manager_batch),), self.cluster_id, dtype=torch.long, device=self.device)
+            dist = self.manager.dist(states, cluster_ids=cluster_ids)
+        else:
+            dist = self.manager.dist(states)            
             
-        for _ in range(self.manager_epochs):
-            if getattr(self, "use_cluster_embedding", False):
-                dist = self.manager.dist(states, cluster_ids=cluster_ids)
-            else:
-                dist = self.manager.dist(states)            
-            new_log_probs = dist.log_prob(subgoals)
-            ratio = torch.exp(new_log_probs - old_log_probs)
-            surr1 = ratio * advantages
-            surr2 = torch.clamp(ratio, 1 - self.manager_clip_eps, 1 + self.manager_clip_eps) * advantages
-            entropy = dist.entropy().mean()
-            loss = -torch.min(surr1, surr2).mean() - self.manager_entropy_coef * entropy
-            self.manager_optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.manager.parameters(), max_norm=1.0)
-            self.manager_optimizer.step()
-            losses.append(float(loss.item()))
-        return float(np.mean(losses))
+        new_log_probs = dist.log_prob(subgoals)
+        ratio = torch.exp(new_log_probs - old_log_probs)
+        surr1 = ratio * advantages
+        surr2 = torch.clamp(ratio, 1 - self.manager_clip_eps, 1 + self.manager_clip_eps) * advantages
+        entropy = dist.entropy().mean()
+        
+        loss = -torch.min(surr1, surr2).mean() - self.manager_entropy_coef * entropy
+        
+        self.manager_optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.manager.parameters(), max_norm=1.0)
+        self.manager_optimizer.step()
+        
+        return float(loss.item())
 
     def learn(self):
         if len(self.memory) < self.batch_size:
             return
-        batch = self.memory[:]
-        manager_loss = self._manager_update(batch)
-        controller_loss = self._controller_update(batch)
-        self.loss.append({
-            "manager_loss": manager_loss,
-            "controller_loss": controller_loss,
-            "combined_loss": manager_loss + controller_loss,
-        })
+            
+        c_losses, m_losses = [], []
+        
+        for _ in range(self.controller_epochs):
+            random.shuffle(self.memory)
+            for i in range(0, len(self.memory), self.batch_size):
+                batch = self.memory[i:i + self.batch_size]
+                loss = self._controller_update(batch)
+                if loss is not None: c_losses.append(loss)
+                
+        for _ in range(self.manager_epochs):
+            random.shuffle(self.memory)
+            for i in range(0, len(self.memory), self.batch_size):
+                batch = self.memory[i:i + self.batch_size]
+                loss = self._manager_update(batch)
+                if loss is not None: m_losses.append(loss)
+
+        if c_losses or m_losses:
+            self.loss.append({
+                "manager_loss": np.mean(m_losses) if m_losses else 0.0,
+                "controller_loss": np.mean(c_losses) if c_losses else 0.0,
+                "combined_loss": (np.mean(m_losses) if m_losses else 0.0) + (np.mean(c_losses) if c_losses else 0.0),
+            })
+            
         self.memory.clear()
 
 
