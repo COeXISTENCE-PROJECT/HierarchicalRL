@@ -1,0 +1,38 @@
+{
+  "os":  "Windows-11-10.0.26200-SP0",
+  "python":  "CPython 3.13.14",
+  "startedAt":  "2026-08-28T16:08:34.611416Z",
+  "args":  [
+    "--id",
+    "test_mappo_run",
+    "--task-conf",
+    "config1",
+    "--alg-conf",
+    "config1",
+    "--net",
+    "saint_arnoult"
+  ],
+  "program":  "C:\\Users\\pawel\\Documents\\GMUM\\HRL_Routing_Project\\HierarchicalRL\\scripts\\feudal_hrl_mappo.py",
+  "codePath":  "scripts\\feudal_hrl_mappo.py",
+  "codePathLocal":  "feudal_hrl_mappo.py",
+  "git":  {
+    "remote":  "https://github.com/COeXISTENCE-PROJECT/HierarchicalRL.git",
+    "commit":  "d3318f8bd56449592fafc8b7e17331d8f3620881"
+  },
+  "email":  "paweldorosz112@gmail.com",
+  "root":  "C:\\Users\\pawel\\Documents\\GMUM\\HRL_Routing_Project\\HierarchicalRL\\scripts",
+  "host":  "hppd",
+  "executable":  "C:\\Users\\pawel\\Documents\\GMUM\\HRL_Routing_Project\\.venv\\Scripts\\python.exe",
+  "cpu_count":  12,
+  "cpu_count_logical":  16,
+  "disk":  {
+    "/":  {
+      "total":  "510774996992",
+      "used":  "420463734784"
+    }
+  },
+  "memory":  {
+    "total":  "34011811840"
+  },
+  "writerId":  "ccj3usy0rw6301b0mwgvjp2sjonx3xj8"
+}
