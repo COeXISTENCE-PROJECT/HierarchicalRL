@@ -127,6 +127,7 @@ class ClusterMAPPOAgent(BaseLearningModel):
         self.controller_clip_eps = float(config["controller_clip_eps"])
         self.intrinsic_reward_weight = float(config["intrinsic_reward_weight"])
         self.manager_reward_weight = float(config["manager_reward_weight"])
+        self.manager_entropy_coef = float(config["manager_entropy_coef"])
         
         self.deterministic = False
         self.memory: List[Transition] = []
