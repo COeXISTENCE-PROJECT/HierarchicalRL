@@ -403,12 +403,25 @@ if __name__ == "__main__":
     with open(exp_config_path, "w", encoding="utf-8") as f:
         json.dump(dump_config, f, indent=4)
 
+
+    # Tworzę nazwę grupy na podstawie wszystkiego poza seed
+    # np. "MAPPO_config_spatiotemporal_mp1"
+    group_name = f"{ALGORITHM}_{alg_config}_mp{params['manager_period']}"
+
     wandb.init(
         entity="mk-hrl",
         project="sandbox",
-        name=exp_id,
-        config=dump_config,
+        name=exp_id,          # np. MAPPO_SpatioTemp_mp1_s42 (z argumentu --id)
+        group=group_name,     # Tutaj spinasz wszystkie seedy tego samego klastrowania!
+        config=dump_config,   
     )
+
+    # Rejestracja CSV klastrów jako artefaktu
+    if cluster_csv_path and os.path.exists(cluster_csv_path):
+        artifact = wandb.Artifact(name=f"cluster_{alg_config}", type="dataset")
+        artifact.add_file(cluster_csv_path)
+        wandb.run.log_artifact(artifact)
+   
 
     env = TrafficEnvironment(
         seed=env_seed,
