@@ -398,16 +398,22 @@ if __name__ == "__main__":
         json.dump(dump_config, f, indent=4)
 
 
-    # Tworzę nazwę grupy na podstawie wszystkiego poza seed
-    # np. "MAPPO_config_spatiotemporal_mp1"
-    group_name = f"{ALGORITHM}_{alg_config}_mp{params['manager_period']}"
+    net_abbrs = {
+        "saint_arnoult": "sa", 
+        "provins": "prov", 
+        "ingolstadt_custom": "ingolc", 
+        "ingolstadt_custom2": "ingolc2"
+    }
+    net_abbr = net_abbrs.get(network, network[:5])
+    
+    group_name = f"{ALGORITHM}_{net_abbr}_{alg_config}_mp{params['manager_period']}"
 
     wandb.init(
         entity="mk-hrl",
         project="sandbox",
-        name=exp_id,          # np. MAPPO_SpatioTemp_mp1_s42
-        group=group_name,     # Tutaj spinam wszystkie seedy tego samego klastrowania - ponoć mają być takie cienie w w&b
-        config=dump_config,   
+        name=exp_id,
+        group=group_name,
+        config=dump_config,
     )
 
     if cluster_csv_path and os.path.exists(cluster_csv_path):
