@@ -1,4 +1,11 @@
-"""Feudal MAPPO HRL experiment script for URB-style single-step route decisions."""
+"""
+This script implements the Feudal MAPPO algorithm with the CTDE paradigm, 
+where agents within a single cluster share the weights of the Manager, Controller, and Critic.
+During training, the centralized Critic uses the averaged global state of the cluster to precisely evaluate
+and optimize local decisions made by the Manager (macro-goal selection) and the Controller (micro-action selection).
+In the testing phase, the Critic is discarded, and the vehicles operate in a fully decentralized manner,
+relying solely on their local observations and learned policies.
+"""
 from __future__ import annotations
 
 import argparse
@@ -66,14 +73,6 @@ def build_agent_cluster_map(agents_csv_path, cluster_lookup, key_columns):
 
 def build_mlp_optimizer(module: nn.Module, lr: float) -> optim.Optimizer:
     return optim.Adam(module.parameters(), lr=lr)
-
-# --- TUTAJ ZACZYNA SIĘ TWÓJ KOD ---
-# @dataclass
-# class Transition:
-# ... i tak dalej, aż do samego dołu ...
-
-from dataclasses import dataclass
-import torch.nn.functional as F
 
 @dataclass
 class Transition:
@@ -148,23 +147,21 @@ class ClusterMAPPOAgent(BaseLearningModel):
             subgoal_embed_dim=int(config["subgoal_embed_dim"]),
         ).to(self.device)
 
-        # Nowość: Krytyk dla całego klastra
+        # Krytyk dla całego klastra - przypada jeden na klaster
         self.critic = CentralizedCritic(
             obs_dim=state_size, 
             hidden_dims=config.get("critic_hidden_dims", [64, 64])
         ).to(self.device)
 
-        # Wspólny optymalizator dla wszystkich trzech sieci
         self.optimizer = build_mlp_optimizer(
             nn.ModuleList([self.manager, self.controller, self.critic]), 
-            float(config["manager_lr"]) # Możesz rozdzielić LR w razie potrzeby
+            float(config["manager_lr"]) 
         )
 
     def _to_tensor(self, state: np.ndarray) -> torch.Tensor:
         return torch.as_tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
 
     def _build_uniform_subgoal_mask(self, subgoal: int) -> torch.Tensor:
-        # Analogicznie do starego kodu
         bins = np.array_split(np.arange(self.action_space_size), self.num_subgoals)
         rotated = (subgoal + self.cluster_id) % self.num_subgoals
         chosen = bins[rotated]
@@ -173,10 +170,8 @@ class ClusterMAPPOAgent(BaseLearningModel):
         return mask
 
     def push(self, transition: Transition):
-        """Po prostu wrzuca gotowy obiekt do wspólnego wora klastra."""
         self.memory.append(transition)
     def act(self, local_state: np.ndarray, current_subgoal: int, manager_step: bool) -> tuple:
-        """Wybiera akcję dla konkretnego agenta na podstawie jego lokalnego stanu."""
         state_tensor = self._to_tensor(local_state)
         
         if manager_step:
@@ -224,7 +219,6 @@ class ClusterMAPPOAgent(BaseLearningModel):
         
         # 1. Krytyk ocenia stany globalne
         values = self.critic(global_states).squeeze()
-        # W uproszczeniu dla PPO zakładamy next_value = 0 dla końca paczki
         advantages = self.compute_gae(rewards, values.tolist(), next_value=0.0)
         returns = advantages + values.detach()
         
@@ -411,12 +405,11 @@ if __name__ == "__main__":
     wandb.init(
         entity="mk-hrl",
         project="sandbox",
-        name=exp_id,          # np. MAPPO_SpatioTemp_mp1_s42 (z argumentu --id)
-        group=group_name,     # Tutaj spinasz wszystkie seedy tego samego klastrowania!
+        name=exp_id,          # np. MAPPO_SpatioTemp_mp1_s42
+        group=group_name,     # Tutaj spinam wszystkie seedy tego samego klastrowania - ponoć mają być takie cienie w w&b
         config=dump_config,   
     )
 
-    # Rejestracja CSV klastrów jako artefaktu
     if cluster_csv_path and os.path.exists(cluster_csv_path):
         artifact = wandb.Artifact(name=f"cluster_{alg_config}", type="dataset")
         artifact.add_file(cluster_csv_path)
@@ -487,9 +480,8 @@ if __name__ == "__main__":
 
     obs_size = env.observation_space(env.possible_agents[0]).shape[0]
     
-    # 1. Inicjalizacja Klastrów (Jeden współdzielony model na klaster!)
     unique_clusters = set(agent_cluster_map.values())
-    if not unique_clusters: # Zabezpieczenie na wypadek braku przypisań
+    if not unique_clusters:
         unique_clusters = {0}
         
     cluster_models = {}
@@ -502,7 +494,6 @@ if __name__ == "__main__":
             cluster_id=c_id
         )
 
-    # Agent_lookup nie służy już do przechowywania osobnych modeli, a jedynie wskaźników do klastra
     agent_to_cluster = {}
     for idx in range(len(env.machine_agents)):
         agent_obj = env.machine_agents[idx]
@@ -521,7 +512,6 @@ if __name__ == "__main__":
         episode_rewards = []
         episode_travel_times = []
         
-        # Słownik do trzymania tymczasowego stanu dla poszczególnych agentów (bo modele tego już nie robią)
         agent_context = {} 
 
         for agent_id in env.agent_iter():
@@ -530,7 +520,7 @@ if __name__ == "__main__":
             c_id = agent_to_cluster.get(agent_id, 0)
             model = cluster_models[c_id]
 
-            # 2. Obliczanie Global State (Mean Field dla danego klastra)
+            # Obliczanie Global State (Mean Field dla danego klastra)
             cluster_active_agents = [a for a in env.agents if agent_to_cluster.get(a, 0) == c_id]
             if len(cluster_active_agents) > 0:
                 cluster_obs = [env.observe(a) for a in cluster_active_agents]
@@ -538,7 +528,7 @@ if __name__ == "__main__":
             else:
                 global_state = observation # Fallback
 
-            # 3. Zrzut danych z poprzedniego kroku (jeśli istnieje)
+            # Zrzut danych z poprzedniego kroku (jeśli istnieje)
             if agent_id in agent_context:
                 prev = agent_context[agent_id]
                 
@@ -560,7 +550,7 @@ if __name__ == "__main__":
                 )
                 model.push(transition)
 
-            # 4. Sprawdzenie stanu terminalnego
+            # Sprawdzenie stanu terminalnego
             if termination or truncation:
                 reward = float(reward)
                 episode_rewards.append(reward)
@@ -576,7 +566,7 @@ if __name__ == "__main__":
                 if agent_id in agent_context:
                     del agent_context[agent_id] # Sprzątamy
             else:
-                # 5. Wybór nowej akcji
+                # Wybór nowej akcji
                 step_count = agent_context.get(agent_id, {}).get("step_count", 0)
                 manager_step = (step_count % params["manager_period"] == 0)
                 current_sg = agent_context.get(agent_id, {}).get("subgoal", 0)
