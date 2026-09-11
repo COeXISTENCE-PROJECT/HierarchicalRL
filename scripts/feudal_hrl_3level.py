@@ -12,6 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -428,39 +429,71 @@ if __name__ == "__main__":
         agent_obj.model = FeudalAgent3L(global_core=global_core, cluster_core=cluster_cores[c_id], config=params)
 
     agent_lookup = {str(a.id): a for a in env.machine_agents}
+    agent_to_cluster = {}
+    for idx, a_obj in enumerate(env.machine_agents):
+        raw_id = int(str(a_obj.id).split('_')[-1]) if '_' in str(a_obj.id) else idx
+        agent_to_cluster[str(a_obj.id)] = agent_cluster_map.get(raw_id, 0)
+
+    active_clusters = sorted(list(cluster_cores.keys()))
+    cluster_tt_history = defaultdict(list)
+    cluster_tt_steps = []
     os.makedirs(plots_folder, exist_ok=True)
 
     pbar.set_description("AV learning")
     for episode in range(training_eps):
         env.reset()
         ep_rews, ep_times, g_loss_list, m_loss_list, c_loss_list = [], [], [], [], []
+        cluster_travel_times = defaultdict(list)
 
         for agent_id in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
             agent_lookup[agent_id].model.push(reward)
 
             if termination or truncation:
-                ep_rews.append(float(reward))
-                ep_times.append(float(info["travel_time"]) if isinstance(info, dict) and "travel_time" in info else -float(reward))
+                reward_f = float(reward)
+                ep_rews.append(reward_f)
+                tt = float(info["travel_time"]) if isinstance(info, dict) and "travel_time" in info else -reward_f
+                ep_times.append(tt)
 
-                if episode % update_every == 0:
-                    g_res = global_core.learn()
-                    if g_res: g_loss_list.append(g_res["global_loss"])
-
-                    c_res = agent_lookup[agent_id].model.cluster_core.learn()
-                    if c_res:
-                        if "manager_loss" in c_res: m_loss_list.append(c_res["manager_loss"])
-                        if "controller_loss" in c_res: c_loss_list.append(c_res["controller_loss"])
+                c_id = agent_to_cluster.get(str(agent_id), 0)
+                cluster_travel_times[c_id].append(tt)
+                
                 action = None
             else:
                 action = agent_lookup[agent_id].model.act(observation)
             env.step(action)
+            
+        if episode % update_every == 0:
+            g_res = global_core.learn()
+            if g_res:
+                g_loss_list.append(g_res["global_loss"])
 
-        log_data = {"episode": human_learning_episodes + episode, "train/reward_sum": float(np.sum(ep_rews)), "train/travel_time_mean": float(np.mean(ep_times))}
+            for core in cluster_cores.values():
+                c_res = core.learn()
+                if c_res:
+                    if "manager_loss" in c_res:
+                        m_loss_list.append(c_res["manager_loss"])
+                    if "controller_loss" in c_res:
+                        c_loss_list.append(c_res["controller_loss"])
+                
+        step_idx = human_learning_episodes + episode
+        cluster_tt_steps.append(step_idx)
+        log_data = {
+            "episode": step_idx,
+            "train/reward_sum": float(np.sum(ep_rews)),
+            "train/travel_time_mean": float(np.mean(ep_times)) if ep_times else 0.0,
+        }
         if g_loss_list: log_data["train/global_loss"] = float(np.mean(g_loss_list))
         if m_loss_list: log_data["train/manager_loss"] = float(np.mean(m_loss_list))
         if c_loss_list: log_data["train/controller_loss"] = float(np.mean(c_loss_list))
-        wandb.log(log_data, step=human_learning_episodes + episode)
+
+        for c_id in active_clusters:
+            tts = cluster_travel_times.get(c_id, [])
+            mean_c_tt = float(np.mean(tts)) if tts else 0.0
+            cluster_tt_history[c_id].append(mean_c_tt)
+            log_data[f"train/cluster_{c_id}_travel_time_mean"] = mean_c_tt
+
+        wandb.log(log_data, step=step_idx)
 
         if episode % plot_every == 0: env.plot_results()
         pbar.update()
@@ -476,16 +509,37 @@ if __name__ == "__main__":
     for episode in range(test_eps):
         env.reset()
         ep_rews, ep_times = [], []
+        cluster_travel_times = defaultdict(list)
         for agent_id in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
             if termination or truncation:
-                ep_rews.append(float(reward))
-                if isinstance(info, dict) and "travel_time" in info: ep_times.append(float(info["travel_time"]))
+                reward_f = float(reward)
+                ep_rews.append(reward_f)
+                tt = float(info["travel_time"]) if isinstance(info, dict) and "travel_time" in info else -reward_f
+                ep_times.append(tt)
+
+                c_id = agent_to_cluster.get(str(agent_id), 0)
+                cluster_travel_times[c_id].append(tt)
+                
                 action = None
             else:
                 action = agent_lookup[agent_id].model.act(observation)
             env.step(action)
-        wandb.log({"episode": human_learning_episodes + training_eps + episode, "test/reward_sum": float(np.sum(ep_rews)), "test/travel_time_mean": float(np.mean(ep_times))}, step=human_learning_episodes + training_eps + episode)
+        test_step_idx = human_learning_episodes + training_eps + episode
+        cluster_tt_steps.append(test_step_idx)
+
+        test_log_data = {
+            "episode": test_step_idx,
+            "test/reward_sum": float(np.sum(ep_rews)),
+            "test/travel_time_mean": float(np.mean(ep_times)) if ep_times else 0.0,
+        }
+        for c_id in active_clusters:
+            tts = cluster_travel_times.get(c_id, [])
+            mean_c_tt = float(np.mean(tts)) if tts else 0.0
+            cluster_tt_history[c_id].append(mean_c_tt)
+            test_log_data[f"test/cluster_{c_id}_travel_time_mean"] = mean_c_tt
+
+        wandb.log(test_log_data, step=test_step_idx)
         pbar.update()
 
     pbar.close()
