@@ -1,0 +1,35 @@
+{
+    "training_eps": 1000,
+    "use_cluster_embedding": true,
+    "cluster_csv_path": "clustering_ideas/provins_clustering/agents_clustered_by_path.csv",
+    "cluster_key_columns": ["start_time", "origin", "destination"],
+    "cluster_embed_dim": 8,
+
+    "manager_period": 1,
+    "num_subgoals": 3,
+    "subgoal_embed_dim": 8,
+
+    "batch_size": 16,
+    "update_every": 1,
+
+    "manager_epochs": 3,
+    "controller_epochs": 3,
+    "manager_clip_eps": 0.2,
+    "controller_clip_eps": 0.2,
+
+    "manager_entropy_coef": 0.01,
+    "controller_entropy_coef": 0.01,
+
+    "normalize_advantage": true,
+
+    "intrinsic_reward_weight": 0.1,
+    "manager_reward_weight": 1.0,
+    "goal_switch_penalty": 0.005,
+    "action_mask_strategy": "uniform_bins",
+
+    "manager_hidden_dims": [128, 128],
+    "controller_hidden_dims": [128, 128],
+
+    "manager_lr": 0.0003,
+    "controller_lr": 0.0003
+}
