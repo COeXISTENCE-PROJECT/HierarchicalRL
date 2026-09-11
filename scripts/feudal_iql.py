@@ -331,17 +331,17 @@ if __name__ == "__main__":
     print("Device is:", device)
 
     # Merge existing IQL and Feudal-HRL configs.
-    with open(f"../config/algo_config/iql/{alg_config}.json", "r", encoding="utf-8") as f:
+    with open(f"../config/algo_config/{ALGORITHM}/{alg_config}.json", "r", encoding="utf-8") as f:
         iql_params = json.load(f)
-    with open(f"../config/algo_config/feudal_hrl/{alg_config}.json", "r", encoding="utf-8") as f:
-        feudal_params = json.load(f)
+    # with open(f"../config/algo_config/feudal_hrl/{alg_config}.json", "r", encoding="utf-8") as f:
+    #     feudal_params = json.load(f)
     with open(f"../config/env_config/{env_config}.json", "r", encoding="utf-8") as f:
         env_params = json.load(f)
     with open(f"../config/task_config/{task_config}.json", "r", encoding="utf-8") as f:
         task_params = json.load(f)
 
     alg_params = dict(iql_params)
-    alg_params.update(feudal_params)
+    # alg_params.update(feudal_params)
     params = {}
     params.update(alg_params)
     params.update(env_params)
@@ -351,7 +351,7 @@ if __name__ == "__main__":
         globals()[key] = value
 
     num_subgoals = int(params.get("num_subgoals", 4))
-    manager_period = int(params.get("manager_period", 4))
+    manager_period = int(params.get("manager_period", 1))
 
     custom_network_folder = f"../networks/{network}"
     phases = [1, human_learning_episodes, int(training_eps) + human_learning_episodes]
@@ -650,14 +650,26 @@ if __name__ == "__main__":
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
     run_metrics_analysis(exp_id, results_folder="../results")
 
-    rewards_path = os.path.join(plots_folder, "rewards.png")
-    travel_times_path = os.path.join(plots_folder, "travel_times.png")
-    plots_to_log = {}
-    if os.path.exists(rewards_path):
-        plots_to_log["Plots/Rewards"] = wandb.Image(rewards_path)
-    if os.path.exists(travel_times_path):
-        plots_to_log["Plots/Travel_Times"] = wandb.Image(travel_times_path)
-    if plots_to_log:
-        wandb.log(plots_to_log)
+    if wandb is not None and wandb.run is not None:
+        # One W&B chart with exactly one line per active AV cluster.
+        # x-axis spans AV training + deterministic testing episodes.
+        if cluster_tt_steps and active_clusters:
+            cluster_tt_plot = wandb.plot.line_series(
+                xs=cluster_tt_steps,
+                ys=[cluster_tt_history[c_id] for c_id in active_clusters],
+                keys=[f"Cluster {c_id}" for c_id in active_clusters],
+                title="Cluster-wise mean travel time",
+                xname="Episode",
+            )
+            wandb.log({"Plots/Cluster-wise Travel Time": cluster_tt_plot})
 
-    wandb.finish()
+        rewards_path = os.path.join(plots_folder, "rewards.png")
+        travel_times_path = os.path.join(plots_folder, "travel_times.png")
+        plots_to_log = {}
+        if os.path.exists(rewards_path):
+            plots_to_log["Plots/Rewards"] = wandb.Image(rewards_path)
+        if os.path.exists(travel_times_path):
+            plots_to_log["Plots/Travel_Times"] = wandb.Image(travel_times_path)
+        if plots_to_log:
+            wandb.log(plots_to_log)
+        wandb.finish()
