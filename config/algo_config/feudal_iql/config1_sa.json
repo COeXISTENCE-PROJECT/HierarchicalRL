@@ -1,0 +1,37 @@
+{
+    "desc": "Feudal-IQL on Saint-Arnoult with random agent clusters. Cluster-level DQN managers with independent goal-conditioned IQL workers.",
+    "training_eps": 300,
+    "eps_init": 0.99,
+    "eps_decay": 0.998,
+    "lr": 0.003,
+    "batch_size": 16,
+    "buffer_size": 256,
+    "num_epochs": 1,
+    "widths": [
+        32,
+        64,
+        32
+    ],
+    "num_subgoals": 4,
+    "manager_period": 4,
+    "manager_eps_init": 0.99,
+    "manager_eps_decay": 0.998,
+    "manager_lr": 0.003,
+    "manager_batch_size": 16,
+    "manager_buffer_size": 256,
+    "manager_num_epochs": 1,
+    "manager_hidden_dims": [
+        64,
+        64
+    ],
+    "manager_reward_weight": 1.0,
+    "intrinsic_reward_weight": 0.1,
+    "goal_consistency_reward": 1.0,
+    "action_mask_strategy": "uniform_bins",
+    "cluster_csv_path": "clustering_ideas/saint_arnoult_clustering/agents_clustered_random_small_K3.csv",
+    "cluster_key_columns": [
+        "start_time",
+        "origin",
+        "destination"
+    ]
+}
