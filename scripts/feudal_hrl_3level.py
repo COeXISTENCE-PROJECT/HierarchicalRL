@@ -502,8 +502,28 @@ if __name__ == "__main__":
     env.stop_simulation()
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
     run_metrics_analysis(exp_id, results_folder="../results")
-    plots_to_log = {}
-    if os.path.exists(os.path.join(plots_folder, "rewards.png")): plots_to_log["Plots/Rewards"] = wandb.Image(os.path.join(plots_folder, "rewards.png"))
-    if os.path.exists(os.path.join(plots_folder, "travel_times.png")): plots_to_log["Plots/Travel_Times"] = wandb.Image(os.path.join(plots_folder, "travel_times.png"))
-    if plots_to_log: wandb.log(plots_to_log)
+    
+    if wandb is not None and wandb.run is not None:
+            # One W&B chart with exactly one line per active AV cluster.
+            # x-axis spans AV training + deterministic testing episodes.
+            if cluster_tt_steps and active_clusters:
+                cluster_tt_plot = wandb.plot.line_series(
+                    xs=cluster_tt_steps,
+                    ys=[cluster_tt_history[c_id] for c_id in active_clusters],
+                    keys=[f"Cluster {c_id}" for c_id in active_clusters],
+                    title="Cluster-wise mean travel time",
+                    xname="Episode",
+                )
+                wandb.log({"Plots/Cluster-wise Travel Time": cluster_tt_plot})
+    
+            rewards_path = os.path.join(plots_folder, "rewards.png")
+            travel_times_path = os.path.join(plots_folder, "travel_times.png")
+            plots_to_log = {}
+            if os.path.exists(rewards_path):
+                plots_to_log["Plots/Rewards"] = wandb.Image(rewards_path)
+            if os.path.exists(travel_times_path):
+                plots_to_log["Plots/Travel_Times"] = wandb.Image(travel_times_path)
+            if plots_to_log:
+                wandb.log(plots_to_log)
+            
     wandb.finish()

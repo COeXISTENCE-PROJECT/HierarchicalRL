@@ -12,6 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -502,13 +503,26 @@ if __name__ == "__main__":
         )
 
     agent_lookup = {str(agent.id): agent for agent in env.machine_agents}
+    
+    agent_to_cluster = {}
+    for idx, agent_obj in enumerate(env.machine_agents):
+        try:
+            agent_int_id = int(str(agent_obj.id).split('_')[-1])
+        except:
+            agent_int_id = idx
+        agent_to_cluster[str(agent_obj.id)] = agent_cluster_map.get(agent_int_id, 0)
 
+    active_clusters = sorted(list(cluster_controllers.keys()))
+    cluster_tt_history = defaultdict(list)
+    cluster_tt_steps = []
+    
     os.makedirs(plots_folder, exist_ok=True)
     pbar.set_description("AV learning")
     for episode in range(training_eps):
         env.reset()
         episode_rewards, episode_travel_times = [], []
         manager_losses, controller_losses = [], []
+        cluster_travel_times = defaultdict(list)
 
         for agent_id in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
@@ -522,11 +536,12 @@ if __name__ == "__main__":
                     episode_travel_times.append(float(info["travel_time"]))
                 else:
                     episode_travel_times.append(-reward)
-
+                    
+                tt = float(info["travel_time"]) if isinstance(info, dict) and "travel_time" in info else -reward
+                c_id = agent_to_cluster.get(str(agent_id), 0)
+                cluster_travel_times[c_id].append(tt)
+                
                 if episode % update_every == 0:
-                    m_loss = central_manager.learn()
-                    if m_loss: manager_losses.append(m_loss["manager_loss"])
-
                     c_loss = agent_lookup[agent_id].model.controller_core.learn()
                     if c_loss: controller_losses.append(c_loss["controller_loss"])
 
@@ -536,6 +551,10 @@ if __name__ == "__main__":
 
             env.step(action)
 
+        if episode % update_every == 0:
+            m_loss = central_manager.learn()
+            if m_loss: manager_losses.append(m_loss["manager_loss"])
+
         log_data = {
             "episode": human_learning_episodes + episode,
             "training/reward_sum": float(np.sum(episode_rewards)),
@@ -544,7 +563,13 @@ if __name__ == "__main__":
         }
         if manager_losses: log_data["training/manager_loss"] = float(np.mean(manager_losses))
         if controller_losses: log_data["training/controller_loss"] = float(np.mean(controller_losses))
-
+        step_idx = human_learning_episodes + episode
+        cluster_tt_steps.append(step_idx)
+        for c_id in active_clusters:
+            tts = cluster_travel_times.get(c_id, [])
+            mean_c_tt = float(np.mean(tts)) if tts else 0.0
+            cluster_tt_history[c_id].append(mean_c_tt)
+            log_data[f"training/cluster_{c_id}_travel_time_mean"] = mean_c_tt
         wandb.log(log_data, step=human_learning_episodes + episode)
 
         if episode % plot_every == 0:
@@ -561,24 +586,39 @@ if __name__ == "__main__":
     for episode in range(test_eps):
         env.reset()
         episode_rewards, episode_travel_times = [], []
+        cluster_travel_times = defaultdict(list)
 
         for agent_id in env.agent_iter():
             observation, reward, termination, truncation, info = env.last()
 
             if termination or truncation:
-                episode_rewards.append(float(reward))
-                if isinstance(info, dict) and "travel_time" in info:
-                    episode_travel_times.append(float(info["travel_time"]))
+                reward_f = float(reward)
+                episode_rewards.append(reward_f)
+                tt = float(info["travel_time"]) if isinstance(info, dict) and "travel_time" in info else -reward_f
+                episode_travel_times.append(tt)
+                
+                c_id = agent_to_cluster.get(str(agent_id), 0)
+                cluster_travel_times[c_id].append(tt)
                 action = None
             else:
                 action = agent_lookup[agent_id].model.act(observation)
             env.step(action)
 
-        wandb.log({
-            "episode": human_learning_episodes + training_eps + episode,
+        test_step_idx = human_learning_episodes + training_eps + episode
+        cluster_tt_steps.append(test_step_idx)
+
+        test_log_data = {
+            "episode": test_step_idx,
             "testing/reward_sum": float(np.sum(episode_rewards)),
             "testing/travel_time_mean": float(np.mean(episode_travel_times)),
-        }, step=human_learning_episodes + training_eps + episode)
+        }
+        for c_id in active_clusters:
+            tts = cluster_travel_times.get(c_id, [])
+            mean_c_tt = float(np.mean(tts)) if tts else 0.0
+            cluster_tt_history[c_id].append(mean_c_tt)
+            test_log_data[f"testing/cluster_{c_id}_travel_time_mean"] = mean_c_tt
+
+        wandb.log(test_log_data, step=test_step_idx)
         pbar.update()
 
     pbar.close()
@@ -603,4 +643,14 @@ if __name__ == "__main__":
     if os.path.exists(os.path.join(plots_folder, "travel_times.png")): plots_to_log["Plots/Travel_Times"] = wandb.Image(os.path.join(plots_folder, "travel_times.png"))
     if plots_to_log: wandb.log(plots_to_log)
 
+
+    if cluster_tt_steps and active_clusters:
+        cluster_tt_plot = wandb.plot.line_series(
+            xs=cluster_tt_steps,
+            ys=[cluster_tt_history[c_id] for c_id in active_clusters],
+            keys=[f"Cluster {c_id}" for c_id in active_clusters],
+            title="Cluster-wise mean travel time",
+            xname="Episode",
+        )
+        wandb.log({"Plots/Cluster-wise Travel Time": cluster_tt_plot})
     wandb.finish()
