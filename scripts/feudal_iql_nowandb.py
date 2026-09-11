@@ -44,7 +44,10 @@ from utils import (
     script_path_for_config,
 )
 
-import wandb
+try:
+    import wandb
+except ImportError:
+    wandb = None
 
 
 def load_cluster_lookup(cluster_csv_path: str, key_columns: List[str]) -> Tuple[Dict[Tuple, int], int]:
@@ -292,6 +295,20 @@ def safe_cluster_state(env, cluster_agent_ids: List[str], state_size: int) -> np
     return np.mean(np.stack(observations), axis=0).astype(np.float32)
 
 
+def maybe_init_wandb(exp_id: str, config: Dict):
+    if wandb is None:
+        return None
+    try:
+        return wandb.init(entity="mk-hrl", project="sandbox", name=exp_id, config=config)
+    except Exception as exc:
+        logging.warning("W&B initialization failed; continuing without it: %s", exc)
+        return None
+
+
+def maybe_wandb_log(data: Dict, step: int) -> None:
+    if wandb is not None and wandb.run is not None:
+        wandb.log(data, step=step)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -409,33 +426,7 @@ if __name__ == "__main__":
 
     with open(os.path.join(records_folder, "exp_config.json"), "w", encoding="utf-8") as f:
         json.dump(params, f, indent=4)
-
-    # Keep W&B organization consistent with the other Feudal scripts.
-    net_abbrs = {
-        "saint_arnoult": "sa",
-        "provins": "prov",
-        "ingolstadt_custom": "ingolc",
-        "ingolstadt_custom2": "ingolc2",
-    }
-    net_abbr = net_abbrs.get(network, network[:5])
-    group_name = f"{ALGORITHM}_{net_abbr}_{alg_config}_mp{manager_period}"
-
-    wandb.init(
-        entity="mk-hrl",
-        project="sandbox",
-        name=exp_id,
-        group=group_name,
-        config=params,
-    )
-
-    # Store the exact clustering file used by the run as a W&B artifact.
-    if cluster_csv_path and os.path.exists(cluster_csv_path):
-        artifact = wandb.Artifact(
-            name=f"cluster_{network}_{alg_config}",
-            type="dataset",
-        )
-        artifact.add_file(cluster_csv_path)
-        wandb.run.log_artifact(artifact)
+    maybe_init_wandb(exp_id, params)
 
     env = TrafficEnvironment(
         seed=env_seed,
@@ -584,7 +575,7 @@ if __name__ == "__main__":
         }
         for c_id in active_clusters:
             log_data[f"subgoal/cluster_{c_id}"] = int(current_cluster_goal[c_id])
-        wandb.log(log_data, step=human_learning_episodes + episode)
+        maybe_wandb_log(log_data, step=human_learning_episodes + episode)
 
         if episode % plot_every == 0:
             env.plot_results()
@@ -619,16 +610,13 @@ if __name__ == "__main__":
                 action = agent_lookup[agent_id].model.act(observation, current_cluster_goal.get(c_id, 0))
             env.step(action)
 
-        wandb.log(
-            {
-                "episode": human_learning_episodes + training_eps + episode,
-                "testing/reward_sum": float(np.sum(episode_rewards)) if episode_rewards else 0.0,
-                "testing/reward_mean": float(np.mean(episode_rewards)) if episode_rewards else 0.0,
-                "testing/travel_time_mean": float(np.mean(episode_travel_times)) if episode_travel_times else 0.0,
-                "testing/travel_time_sum": float(np.sum(episode_travel_times)) if episode_travel_times else 0.0,
-            },
-            step=human_learning_episodes + training_eps + episode,
-        )
+        maybe_wandb_log({
+            "episode": human_learning_episodes + training_eps + episode,
+            "testing/reward_sum": float(np.sum(episode_rewards)) if episode_rewards else 0.0,
+            "testing/reward_mean": float(np.mean(episode_rewards)) if episode_rewards else 0.0,
+            "testing/travel_time_mean": float(np.mean(episode_travel_times)) if episode_travel_times else 0.0,
+            "testing/travel_time_sum": float(np.sum(episode_travel_times)) if episode_travel_times else 0.0,
+        }, step=human_learning_episodes + training_eps + episode)
         pbar.update()
 
     pbar.close()
@@ -650,14 +638,14 @@ if __name__ == "__main__":
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
     run_metrics_analysis(exp_id, results_folder="../results")
 
-    rewards_path = os.path.join(plots_folder, "rewards.png")
-    travel_times_path = os.path.join(plots_folder, "travel_times.png")
-    plots_to_log = {}
-    if os.path.exists(rewards_path):
-        plots_to_log["Plots/Rewards"] = wandb.Image(rewards_path)
-    if os.path.exists(travel_times_path):
-        plots_to_log["Plots/Travel_Times"] = wandb.Image(travel_times_path)
-    if plots_to_log:
-        wandb.log(plots_to_log)
-
-    wandb.finish()
+    if wandb is not None and wandb.run is not None:
+        rewards_path = os.path.join(plots_folder, "rewards.png")
+        travel_times_path = os.path.join(plots_folder, "travel_times.png")
+        plots_to_log = {}
+        if os.path.exists(rewards_path):
+            plots_to_log["Plots/Rewards"] = wandb.Image(rewards_path)
+        if os.path.exists(travel_times_path):
+            plots_to_log["Plots/Travel_Times"] = wandb.Image(travel_times_path)
+        if plots_to_log:
+            wandb.log(plots_to_log)
+        wandb.finish()
