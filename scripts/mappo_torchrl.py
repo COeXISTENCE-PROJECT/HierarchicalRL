@@ -91,9 +91,19 @@ if __name__ == "__main__":
     params.update(task_params)
     del params["desc"], alg_params, env_params, task_params
 
-    # set params as variables in this script
+    #set params as variables in this script
     for key, value in params.items():
         globals()[key] = value
+
+    # --- INICJALIZACJA W&B (DODANE) ---
+    import wandb
+    wandb.init(
+        entity="mk-hrl",
+        project="sandbox",
+        name=args.id,
+        config=alg_params  
+    )
+    # ----------------------------------
 
     custom_network_folder = f"../networks/{network}"
     records_folder = f"../results/{exp_id}"
@@ -438,3 +448,21 @@ if __name__ == "__main__":
 
     clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
     run_metrics_analysis(exp_id, results_folder="../results")
+    clear_SUMO_files(os.path.join(records_folder, "SUMO_output"), os.path.join(records_folder, "episodes"), remove_additional_files=True)
+    run_metrics_analysis(exp_id, results_folder="../results")
+
+    # --- WYSYŁANIE WYKRESÓW DO W&B (DODANE) ---
+    rewards_path = os.path.join(plots_folder, "rewards.png")
+    travel_times_path = os.path.join(plots_folder, "travel_times.png")
+
+    plots_to_log = {}
+    if os.path.exists(rewards_path):
+        plots_to_log["Plots/Rewards"] = wandb.Image(rewards_path)
+    if os.path.exists(travel_times_path):
+        plots_to_log["Plots/Travel_Times"] = wandb.Image(travel_times_path)
+    
+    if plots_to_log:
+        wandb.log(plots_to_log)
+    # ------------------------------------------
+
+    wandb.finish()
