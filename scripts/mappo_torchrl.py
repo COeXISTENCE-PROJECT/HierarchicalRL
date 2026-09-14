@@ -95,15 +95,26 @@ if __name__ == "__main__":
     for key, value in params.items():
         globals()[key] = value
 
-    # --- INICJALIZACJA W&B (DODANE) ---
     import wandb
+    
+    # Składamy pełny config dla WandB
+    dump_config = params.copy()
+    dump_config.update({
+        "network": network,
+        "env_seed": env_seed,
+        "torch_seed": torch_seed,
+        "env_config": env_config,
+        "task_config": task_config,
+        "alg_config": alg_config,
+        "algorithm": ALGORITHM
+    })
+
     wandb.init(
         entity="mk-hrl",
         project="sandbox",
         name=args.id,
-        config=alg_params  
+        config=dump_config  
     )
-    # ----------------------------------
 
     custom_network_folder = f"../networks/{network}"
     records_folder = f"../results/{exp_id}"
