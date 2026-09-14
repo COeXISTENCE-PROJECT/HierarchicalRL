@@ -6,7 +6,7 @@
 
     "observations" : "previous_agents_plus_start_time",
 
-    "number_of_paths" : 4,
+    "number_of_paths" : 8,
     "path_gen_beta" : -5,
     "num_samples" : 10,
     "path_gen_workers": 3
